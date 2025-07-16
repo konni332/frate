@@ -1,0 +1,15 @@
+# Rust
+/target/
+/**/*.rs.bk
+
+# Cargo
+Cargo.lock
+
+# Logs
+*.log
+
+# JetBrains IDEs (IntelliJ, CLion, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+out/
