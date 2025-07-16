@@ -1,0 +1,4 @@
+use frate::*;
+
+fn main() {
+}
