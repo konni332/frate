@@ -13,3 +13,8 @@ Cargo.lock
 *.iml
 *.iws
 out/
+
+# Frate
+.frate
+frate.toml
+frate.lock
