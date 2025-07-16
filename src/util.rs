@@ -1,9 +1,9 @@
-use std::fs::File;
-use std::io::{BufReader, Bytes, Cursor, Read};
+use std::env::consts::EXE_EXTENSION;
+use std::io::{Cursor};
 use std::path::{Path, PathBuf};
 use sha2::Digest;
 use hex;
-use crate::registry::RegistryTool;
+use crate::lock::{FrateLock, LockedPackage};
 
 pub fn ensure_frate_dirs<P: AsRef<Path>>(root: P) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let mut path = PathBuf::from(root.as_ref());
@@ -86,3 +86,55 @@ pub fn expand_version(version: &str) -> String {
 
 }
 
+pub fn is_locked(name: &str, lock: &FrateLock) -> bool {
+    for package in &lock.package {
+        if package.name == name {
+            return true;
+        }
+    }
+    false
+}
+pub fn get_locked(name: &str, lock: &FrateLock) -> Option<LockedPackage> {
+    for package in &lock.package {
+        if package.name == name {
+            return Some(package.clone());
+        }
+    }
+    None
+}
+
+pub fn is_installed(name: &str) -> bool {
+    let path = std::env::current_dir().expect("Failed to get current directory")
+        .join(".frate").join("bin").join(name).join(name).with_extension(EXE_EXTENSION);
+    path.exists()
+}
+
+pub fn find_installed_paths(
+    name: &str
+) -> Result<(Option<PathBuf>, Option<PathBuf>), Box<dyn std::error::Error>> {
+    let cwd = std::env::current_dir()?;
+    let exe_path = cwd
+        .join(".frate")
+        .join("bin")
+        .join(name)
+        .join(name)
+        .with_extension(EXE_EXTENSION);
+    let exe_found = exe_path.exists();
+
+    #[cfg(target_os = "windows")]
+    let shim_path = cwd.join(".frate").join("shims").join(name).with_extension("bat");
+    #[cfg(not(target_os = "windows"))]
+    let shim_path = cwd.join(".frate").join("shims").join(name);
+
+    let shim_found = shim_path.exists();
+    Ok((
+        match exe_found {
+            true => Some(exe_path),
+            false => None,
+        },
+        match shim_found {
+            true => Some(shim_path),
+            false => None,
+        }
+    ))
+}

@@ -3,14 +3,13 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use crate::registry::resolve_dependency;
 use crate::toml::FrateToml;
-use crate::util::expand_version;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FrateLock {
     pub package: Vec<LockedPackage>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LockedPackage {
     pub name: String,
     pub version: String,
