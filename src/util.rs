@@ -104,7 +104,7 @@ pub fn get_locked(name: &str, lock: &FrateLock) -> Option<LockedPackage> {
 }
 
 pub fn is_installed(name: &str) -> bool {
-    let (exe_path, _) = find_installed_paths(name).unwrap();
+    let (exe_path, _) = find_installed_paths(name).unwrap_or((None, None));
     exe_path.is_some()
 }
 

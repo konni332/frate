@@ -64,7 +64,7 @@ pub fn fetch_registry(tool_name: &str) -> Result<RegistryTool> {
     let response = reqwest::blocking::get(&url)?;
 
     if !response.status().is_success() {
-        bail!("Failed to fetch tool from registry");
+        bail!("Failed to fetch {} from registry", tool_name);
     }
     let body = response.text()?;
     let tool: RegistryTool = serde_json::from_str(&body)?;
