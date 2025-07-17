@@ -19,3 +19,4 @@ semver = "1.0.26"
 anyhow = "1.0.98"
 walkdir = "2.5.0"
 regex = "1.11.1"
+verbosio = { version = "0.1.1", features = ["color"] }

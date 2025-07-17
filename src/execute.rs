@@ -1,5 +1,6 @@
 use std::process::Command;
 use anyhow::{bail, Result};
+use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
@@ -20,7 +21,10 @@ pub fn execute(cli: CLI) -> Result<()> {
     }
     match cli.command {
         FrateCommand::List { verbose } => {
-            execute_list(verbose)
+            if verbose {
+                set_verbosity!()
+            }
+            execute_list()
         }
         FrateCommand::Init => {
             execute_init()
@@ -61,7 +65,7 @@ pub fn execute(cli: CLI) -> Result<()> {
 ///
 /// # Errors
 /// Returns an error if reading or parsing the manifest or lock file fails.
-pub fn execute_list(verbose: bool) -> Result<()> {
+pub fn execute_list() -> Result<()> {
     let toml_path = get_frate_toml()?;
     let toml_str = std::fs::read_to_string(toml_path)?;
     let toml: FrateToml = toml::from_str(&toml_str)?;
@@ -86,16 +90,10 @@ pub fn execute_list(verbose: bool) -> Result<()> {
                 let locked = get_locked(name, &lock);
                 match locked {
                     Some(locked) => {
-                        match verbose {
-                            true => {
-                                println!("   locked");
-                            },
-                            false => {
-                                println!("   locked at: {}", locked.version);
-                                println!("  # hash: {}", locked.hash);
-                                println!("  source: {}", locked.source);
-                            }
-                        }
+                        println!("   locked");
+                        verbose!(1, "   locked at: {}", locked.version);
+                        verbose!(1, "  # hash: {}", locked.hash);
+                        verbose!(1, "  source: {}", locked.source);
                     },
                     None => {
                         println!("   unlocked");
