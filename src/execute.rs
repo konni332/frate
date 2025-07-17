@@ -124,7 +124,7 @@ pub fn execute_sync() -> Result<()> {
     let toml_str = std::fs::read_to_string(cwd.join("frate.toml"))?;
     let toml: FrateToml = toml::from_str(&toml_str)?;
     let mut lock = FrateLock::load_or_default(cwd.join("frate.lock"));
-    let _ = lock.sync(&toml);
+    lock.sync(&toml)?;
     lock.save(cwd.join("frate.lock"))?;
     Ok(())
 }

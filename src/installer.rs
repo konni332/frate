@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
 use crate::util::{download_and_extract, ensure_frate_dirs, get_frate_dir};
@@ -11,7 +11,7 @@ const EXEC_EXT: &str = "";
 
 pub fn install_packages<P: AsRef<Path>>(lock: &FrateLock, project_root: P) -> Result<()> {
     let frate_dir = ensure_frate_dirs(project_root)?;
-    for package in &lock.package {
+    for package in &lock.packages {
         install_package(package, &frate_dir)?;
     }
     Ok(())

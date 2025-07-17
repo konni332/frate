@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::consts::EXE_EXTENSION;
 use std::io::{Cursor};
 use std::path::{Path, PathBuf};
 use sha2::Digest;
@@ -88,7 +87,7 @@ pub fn expand_version(version: &str) -> String {
 }
 
 pub fn is_locked(name: &str, lock: &FrateLock) -> bool {
-    for package in &lock.package {
+    for package in &lock.packages {
         if package.name == name {
             return true;
         }
@@ -96,7 +95,7 @@ pub fn is_locked(name: &str, lock: &FrateLock) -> bool {
     false
 }
 pub fn get_locked(name: &str, lock: &FrateLock) -> Option<LockedPackage> {
-    for package in &lock.package {
+    for package in &lock.packages {
         if package.name == name {
             return Some(package.clone());
         }

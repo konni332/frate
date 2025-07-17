@@ -7,7 +7,7 @@ use anyhow::Result;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FrateLock {
-    pub package: Vec<LockedPackage>,
+    pub packages: Vec<LockedPackage>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,15 +22,15 @@ impl FrateLock {
     pub fn load_or_default<P: AsRef<Path>>(path: P) -> Self {
         if path.as_ref().exists() {
             let content = fs::read_to_string(path).unwrap_or_default();
-            toml::from_str(&content).unwrap_or_else(|_| FrateLock {package: vec![]})
+            toml::from_str(&content).unwrap_or_else(|_| FrateLock { packages: vec![]})
         }
         else {
-            FrateLock {package: vec![]}
+            FrateLock { packages: vec![]}
         }
     }
 
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>{
-        let content = toml::to_string_pretty(&self).unwrap();
+        let content = toml::to_string_pretty(&self)?;
         if !path.as_ref().exists() {
             fs::File::create(&path)?;
         }
@@ -41,18 +41,25 @@ impl FrateLock {
     pub fn sync(
         &mut self, toml: &FrateToml
     ) -> Result<()> {
+        self.packages.clear();
         for (name, version_req) in &toml.dependencies {
-            let resolved = resolve_dependency(name, version_req)?;
+            let resolved = match resolve_dependency(name, version_req) {
+                Ok(resolved) => resolved,
+                Err(e) => {
+                    eprintln!("Failed to resolve dependency: {}", e.to_string());
+                    continue;
+                },
+            };
             let locked = LockedPackage {
                 name: resolved.name,
                 version: resolved.version,
                 source: resolved.url,
                 hash: resolved.hash,
             };
-            if self.package.iter().any(|p| p.name == locked.name) {
+            if self.packages.iter().any(|p| p.name == locked.name) {
                 continue;
             }
-            self.package.push(locked);
+            self.packages.push(locked);
         }
         Ok(())
     }
