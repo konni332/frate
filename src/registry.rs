@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use crate::util::expand_version;
+use anyhow::{bail, Result};
 
 #[derive(Debug, Deserialize)]
 pub struct RegistryTool {
@@ -25,18 +26,8 @@ pub struct ResolvedDependency {
 pub fn resolve_dependency(
     tool_name: &str,
     version: &str
-) -> Result<ResolvedDependency, Box<dyn std::error::Error>> {
-    let url = format!(
-        "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/tools/{}.json",
-        tool_name
-    );
-    let response = reqwest::blocking::get(&url)?;
-
-    if !response.status().is_success() {
-        return Err(format!("Failed to fetch {}: HTTP {}", url, response.status()).into());
-    }
-    let body = response.text()?;
-    let tool: RegistryTool = serde_json::from_str(&body)?;
+) -> Result<ResolvedDependency> {
+    let tool = fetch_registry(tool_name)?;
     
     let full_version = expand_version(version, );
     
@@ -54,7 +45,7 @@ pub fn resolve_dependency(
                 None
             }
         })
-        .ok_or(format!("No release found for {} {}", tool.name, full_version))?;
+        .ok_or(anyhow::anyhow!("Tool version not found in registry"))?;
 
     let resolved = ResolvedDependency {
         name: tool.name,
@@ -63,5 +54,20 @@ pub fn resolve_dependency(
         hash: release.hash.clone(),
     };
     Ok(resolved)
+}
+
+pub fn fetch_registry(tool_name: &str) -> Result<RegistryTool> {
+    let url = format!(
+        "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/tools/{}.json",
+        tool_name
+    );
+    let response = reqwest::blocking::get(&url)?;
+
+    if !response.status().is_success() {
+        bail!("Failed to fetch tool from registry");
+    }
+    let body = response.text()?;
+    let tool: RegistryTool = serde_json::from_str(&body)?;
+    Ok(tool)
 }
 

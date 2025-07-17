@@ -40,9 +40,9 @@ pub enum FrateCommand {
     Sync,
     /// Initializes
     Init,
-    /// Check health
+    /// Check health (unimplemented!)
     Doctor,
-    /// Cleans caches
+    /// Cleans caches (unimplemented!)
     Clean,
     /// Adds a tool to the `frate.toml` and syncs the `frate.lock` file. The tool is not installed!
     Add {

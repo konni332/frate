@@ -1,14 +1,15 @@
 use std::path::{Path, PathBuf};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
-use crate::util::{download_and_extract, ensure_frate_dirs};
+use crate::util::{download_and_extract, ensure_frate_dirs, get_frate_dir};
+use anyhow::Result;
 
 #[cfg(windows)]
 const EXEC_EXT: &str = "exe";
 #[cfg(not(windows))]
 const EXEC_EXT: &str = "";
 
-pub fn install_packages<P: AsRef<Path>>(lock: &FrateLock, project_root: P) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_packages<P: AsRef<Path>>(lock: &FrateLock, project_root: P) -> Result<()> {
     let frate_dir = ensure_frate_dirs(project_root)?;
     for package in &lock.package {
         install_package(package, &frate_dir)?;
@@ -16,7 +17,7 @@ pub fn install_packages<P: AsRef<Path>>(lock: &FrateLock, project_root: P) -> Re
     Ok(())
 }
 
-pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> {
     let bin_dir = frate_dir.join("bin");
     let shims_dir = frate_dir.join("shims");
     // install
@@ -33,9 +34,9 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<(), 
     Ok(())
 }
 
-pub fn uninstall_packages() -> Result<(), Box<dyn std::error::Error>> {
+pub fn uninstall_packages() -> Result<()> {
     println!("Uninstalling all packages");
-    let frate_dir = std::env::current_dir()?.join(".frate");
+    let frate_dir = get_frate_dir()?;
 
     std::fs::remove_dir_all(&frate_dir.join("bin"))?;
     std::fs::remove_dir_all(&frate_dir.join("shims"))?;
@@ -46,7 +47,7 @@ pub fn uninstall_packages() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn uninstall_package(name: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn uninstall_package(name: &str) -> Result<()> {
     println!("Uninstalling {}", name);
     let cwd = std::env::current_dir()?;
     let frate_dir = cwd.join(".frate");

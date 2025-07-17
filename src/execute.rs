@@ -1,15 +1,15 @@
-use std::path::{Path, PathBuf};
 use std::process::Command;
 use anyhow::{bail, Result};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
+use frate::registry::fetch_registry;
 use frate::toml::FrateToml;
-use frate::util::{ensure_frate_dirs, find_installed_paths, get_locked, is_installed};
+use frate::util::{ensure_frate_dirs, find_installed_paths, get_frate_toml, get_locked, is_installed, sort_versions};
 use crate::cli::{FrateCommand, CLI};
 
 pub fn execute(cli: CLI) -> Result<()> {
     if cli.command != FrateCommand::Init {
-        let toml_path = std::env::current_dir()?.join("frate.toml");
+        let toml_path = get_frate_toml()?;
         if !toml_path.exists() {
             bail!("frate.toml not found. Run `frate init` to create one.")
         }
@@ -37,6 +37,12 @@ pub fn execute(cli: CLI) -> Result<()> {
         FrateCommand::Run { name, args} => {
             execute_run(&name, args)
         }
+        FrateCommand::Add { name_at_version } => {
+            execute_add(name_at_version)
+        }
+        FrateCommand::Search { name } => {
+            execute_search(name)
+        }
         _ => {
             Ok(())
         }
@@ -46,7 +52,7 @@ pub fn execute(cli: CLI) -> Result<()> {
 
 
 pub fn execute_list(verbose: bool) -> Result<()> {
-    let toml_path = std::env::current_dir()?.join("frate.toml");
+    let toml_path = get_frate_toml()?;
     let toml_str = std::fs::read_to_string(toml_path)?;
     let toml: FrateToml = toml::from_str(&toml_str)?;
     let lock_path = std::env::current_dir()?.join("frate.lock");
@@ -156,7 +162,8 @@ pub fn execute_uninstall(name: Option<String>) -> Result<()> {
 }
 
 pub fn execute_which(name: &str) -> Result<()> {
-    let (exe_path, shim_path) = find_installed_paths(name)?;
+    let (exe_path, shim_path) = find_installed_paths(name)
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     if exe_path.is_none() && shim_path.is_none() {
         println!("No installed paths found");
         return Ok(());
@@ -177,7 +184,8 @@ pub fn execute_which(name: &str) -> Result<()> {
 }
 
 pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
-    let (exe_path, _) = find_installed_paths(&name)?;
+    let (exe_path, _) = find_installed_paths(&name)
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     let exe_path = match exe_path {
         Some(exe_path) => {
             exe_path
@@ -192,5 +200,32 @@ pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
         bail!("{}", String::from_utf8(output.stderr)?);
     }
     println!("{}", String::from_utf8(output.stdout)?);
+    Ok(())
+}
+
+fn extract_name_at_version(name_at_version: String) -> Result<(String, String)> {
+    let mut split = name_at_version.split('@');
+    let name = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
+    let version = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
+    Ok((name.to_string(), version.to_string()))
+}
+
+pub fn execute_add(name_at_version: String) -> Result<()> {
+    let (name, version) = extract_name_at_version(name_at_version)?;
+    let mut toml = FrateToml::load(std::env::current_dir()?.join("frate.toml"))
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    toml.add(&name, &version)?;
+    toml.save(std::env::current_dir()?.join("frate.toml"))
+        .map_err(|e| anyhow::anyhow!("{:?}", e))
+}
+
+pub fn execute_search(name: String) -> Result<()> {
+    let tool = fetch_registry(&name)?;
+    let sorted = sort_versions(tool.releases);
+    for (version, info) in sorted {
+        println!("{name}@{version}");
+        println!("  {}", &info.url);
+        println!("  {}", &info.hash);
+    }
     Ok(())
 }

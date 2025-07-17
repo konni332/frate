@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use crate::registry::resolve_dependency;
 use crate::toml::FrateToml;
+use anyhow::Result;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FrateLock {
@@ -28,17 +29,18 @@ impl FrateLock {
         }
     }
 
-    pub fn save<P: AsRef<Path>>(&self, path: P) -> std::io::Result<()>{
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()>{
         let content = toml::to_string_pretty(&self).unwrap();
         if !path.as_ref().exists() {
             fs::File::create(&path)?;
         }
-        fs::write(path, content)
+        fs::write(path, content)?;
+        Ok(())
     }
 
     pub fn sync(
         &mut self, toml: &FrateToml
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
         for (name, version_req) in &toml.dependencies {
             let resolved = resolve_dependency(name, version_req)?;
             let locked = LockedPackage {
@@ -47,6 +49,9 @@ impl FrateLock {
                 source: resolved.url,
                 hash: resolved.hash,
             };
+            if self.package.iter().any(|p| p.name == locked.name) {
+                continue;
+            }
             self.package.push(locked);
         }
         Ok(())

@@ -1,9 +1,9 @@
 use std::path::Path;
-
+use anyhow::Result;
 pub fn create_shim<P: AsRef<Path>>(
     target: P,
     shim_path: P
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::symlink;
