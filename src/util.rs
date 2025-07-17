@@ -1,15 +1,15 @@
 use std::collections::HashMap;
-use std::io::{Cursor};
 use std::path::{Path, PathBuf};
-use sha2::Digest;
-use hex;
 use crate::lock::{FrateLock, LockedPackage};
 use anyhow::{bail, Result};
 use regex::Regex;
 use semver::Version;
 use walkdir::WalkDir;
 use crate::registry::ReleaseInfo;
-
+/// Ensures the `.frate` directory structure exists under the given root path.
+/// Creates `.frate/bin` and `.frate/shims` if they don't already exist.
+///
+/// Returns the full path to the `.frate` directory.
 pub fn ensure_frate_dirs<P: AsRef<Path>>(root: P) -> Result<PathBuf> {
     let mut path = PathBuf::from(root.as_ref());
     path.push(".frate");
@@ -21,42 +21,10 @@ pub fn ensure_frate_dirs<P: AsRef<Path>>(root: P) -> Result<PathBuf> {
     Ok(path)
 }
 
-pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> Result<()> {
-    let expected_hash = format_hash(expected_hash);
-    println!("Downloading {}", url);
-    let response = reqwest::blocking::get(url)?;
-    if !response.status().is_success() {
-        bail!("Failed to download {}: {}", url, response.status());
-    }
-    let bytes = response.bytes()?;
 
-    // Check hash
-    let mut hasher = sha2::Sha256::new();
-    hasher.update(&bytes);
-    let actual_hash = hex::encode(hasher.finalize());
-
-    if actual_hash != expected_hash {
-        bail!("Hash mismatch: expected {}, got {}", expected_hash, actual_hash);
-    }
-
-    println!("Extracting {} to {}", url, dest_dir);
-    if url.ends_with(".zip") {
-        let reader = Cursor::new(bytes);
-        let mut zip = zip::ZipArchive::new(reader)?;
-        zip.extract(dest_dir)?;
-    }
-    else if url.ends_with(".tar.gz") {
-        let tar = flate2::read::GzDecoder::new(Cursor::new(bytes));
-        let mut archive = tar::Archive::new(tar);
-        archive.unpack(dest_dir)?;
-    }
-    else {
-        bail!("Unsupported archive type");
-    }
-    Ok(())
-}
-
-fn format_hash(hash: &str) -> String {
+/// Strips the `sha256:` prefix from a hash if present.
+/// This is useful for formatting hashes uniformly.
+pub fn format_hash(hash: &str) -> String {
     if hash.starts_with("sha256:") {
         hash[7..].to_string()
     }
@@ -64,7 +32,8 @@ fn format_hash(hash: &str) -> String {
         hash.to_string()
     }
 }
-
+/// Returns the current target triple (e.g. `x86_64-unknown-linux-gnu`)
+/// based on the host system's architecture and operating system.
 pub fn current_target_triple() -> String {
     let arch = std::env::consts::ARCH;
     let os = std::env::consts::OS;
@@ -79,13 +48,14 @@ pub fn current_target_triple() -> String {
         _ => format!("{}-unknown-{}", arch, os),
     }
 }
-
+/// Expands a version string to include the target triple.
+/// For example, `1.2.3` becomes `1.2.3-x86_64-unknown-linux-gnu`.
 pub fn expand_version(version: &str) -> String {
     let triple = current_target_triple();
     format!("{}-{}", version, triple)
 
 }
-
+/// Checks whether a package with the given name is listed in the `frate.lock`.
 pub fn is_locked(name: &str, lock: &FrateLock) -> bool {
     for package in &lock.packages {
         if package.name == name {
@@ -94,6 +64,7 @@ pub fn is_locked(name: &str, lock: &FrateLock) -> bool {
     }
     false
 }
+/// Returns the locked package entry for the given name, if it exists.
 pub fn get_locked(name: &str, lock: &FrateLock) -> Option<LockedPackage> {
     for package in &lock.packages {
         if package.name == name {
@@ -102,18 +73,18 @@ pub fn get_locked(name: &str, lock: &FrateLock) -> Option<LockedPackage> {
     }
     None
 }
-
+/// Checks whether a package is installed by verifying the binary path exists.
 pub fn is_installed(name: &str) -> bool {
     let (exe_path, _) = find_installed_paths(name).unwrap_or((None, None));
     exe_path.is_some()
 }
-
+/// Finds the paths of both the installed binary and shim for a given package.
+/// Returns a tuple of `Option<PathBuf>` for (binary, shim).
 pub fn find_installed_paths(
     name: &str
 ) -> Result<(Option<PathBuf>, Option<PathBuf>)> {
     let cwd = std::env::current_dir()?;
     let exe_path = get_binary(name)?;
-    dbg!(&exe_path);
     let exe_found = exe_path.exists();
 
     #[cfg(target_os = "windows")]
@@ -134,24 +105,29 @@ pub fn find_installed_paths(
         }
     ))
 }
-
+/// Returns the full path to the `.frate` directory in the current working directory.
 pub fn get_frate_dir() -> Result<PathBuf> {
     let cwd = std::env::current_dir()?;
     Ok(cwd.join(".frate"))
 }
+/// Returns the path to the `.frate/bin` directory.
 pub fn get_frate_bin_dir() -> Result<PathBuf> {
     Ok(get_frate_dir()?.join("bin"))
 }
+/// Returns the path to the `.frate/shims` directory.
 pub fn get_frate_shims_dir() -> Result<PathBuf> {
     Ok(get_frate_dir()?.join("shims"))
 }
+/// Returns the path to the `frate.lock` file in the current working directory.
 pub fn get_frate_lock_file() -> Result<PathBuf> {
     Ok(std::env::current_dir()?.join("frate.lock"))
 }
+/// Returns the path to the `frate.toml` file in the current working directory.
 pub fn get_frate_toml() -> Result<PathBuf> {
     Ok(std::env::current_dir()?.join("frate.toml"))
 }
-
+/// Sorts a map of version strings to `ReleaseInfo` entries in descending semver order.
+/// Preserves any build or target-triple suffixes.
 pub fn sort_versions(releases: HashMap<String, ReleaseInfo>) -> Vec<(String, ReleaseInfo)>{
     let mut versions: Vec<_> = releases.into_iter().collect();
     versions.sort_by(|(a, _), (b, _)| {
@@ -161,11 +137,16 @@ pub fn sort_versions(releases: HashMap<String, ReleaseInfo>) -> Vec<(String, Rel
     });
     versions
 }
-
+/// Validates whether a version string is a valid SemVer version.
+/// Ignores build metadata and target suffixes.
 pub fn is_valid_version(version: &str) -> bool {
     let version = version.split('-').next().unwrap();
     Version::parse(version).is_ok()
 }
+/// Searches for the binary file in the `.frate/bin/<name>` directory.
+/// Picks the first executable that matches the tool name heuristically.
+///
+/// Returns an error if no suitable binary is found.
 pub fn get_binary(name: &str) -> Result<PathBuf> {
     let path = get_frate_bin_dir()?.join(name);
     let entries = WalkDir::new(&path);
@@ -195,6 +176,7 @@ pub fn get_binary(name: &str) -> Result<PathBuf> {
     });
     Ok(candidates.remove(0))
 }
+/// Checks if a given path is an executable file on Unix.
 #[cfg(unix)]
 fn is_executable(path: &Path) -> bool {
     use std::os::unix::fs::PermissionsExt;
@@ -202,6 +184,7 @@ fn is_executable(path: &Path) -> bool {
         .map(|meta| meta.permissions().mode() & 0o111 != 0)
         .unwrap_or(false)
 }
+/// Checks if a given path has a Windows executable extension (.exe, .bat, .cmd).
 #[cfg(windows)]
 fn is_executable(path: &Path) -> bool {
     if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {

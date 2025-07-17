@@ -7,6 +7,10 @@ use frate::toml::FrateToml;
 use frate::util::{ensure_frate_dirs, find_installed_paths, get_frate_toml, get_locked, is_installed, sort_versions};
 use crate::cli::{FrateCommand, CLI};
 
+/// Executes the given CLI command.
+///
+/// # Errors
+/// Returns an error if command execution fails or required files are missing.
 pub fn execute(cli: CLI) -> Result<()> {
     if cli.command != FrateCommand::Init {
         let toml_path = get_frate_toml()?;
@@ -50,7 +54,13 @@ pub fn execute(cli: CLI) -> Result<()> {
 }
 
 
-
+/// Lists all dependencies from `frate.toml` and their status.
+///
+/// # Arguments
+/// * `verbose` - If true, shows detailed information.
+///
+/// # Errors
+/// Returns an error if reading or parsing the manifest or lock file fails.
 pub fn execute_list(verbose: bool) -> Result<()> {
     let toml_path = get_frate_toml()?;
     let toml_str = std::fs::read_to_string(toml_path)?;
@@ -107,7 +117,10 @@ pub fn execute_list(verbose: bool) -> Result<()> {
     }
     Ok(())
 }
-
+/// Initializes a new `frate.toml` in the current directory.
+///
+/// # Errors
+/// Returns an error if the current directory name cannot be determined or file operations fail.
 pub fn execute_init() -> Result<()> {
     let cwd = std::env::current_dir()?;
     let name = cwd.file_name().ok_or(anyhow::anyhow!("Could not get file name"))?
@@ -118,7 +131,10 @@ pub fn execute_init() -> Result<()> {
     toml.save(cwd.join("frate.toml")).map_err(|e| anyhow::anyhow!("{:?}", e))?;
     Ok(())
 }
-
+/// Synchronizes the `frate.lock` file with the current `frate.toml`.
+///
+/// # Errors
+/// Returns an error if reading, parsing, syncing or saving fails.
 pub fn execute_sync() -> Result<()> {
     let cwd = std::env::current_dir()?;
     let toml_str = std::fs::read_to_string(cwd.join("frate.toml"))?;
@@ -128,7 +144,13 @@ pub fn execute_sync() -> Result<()> {
     lock.save(cwd.join("frate.lock"))?;
     Ok(())
 }
-
+/// Installs a specific package or all packages if none specified.
+///
+/// # Arguments
+/// * `name` - Optional package name to install.
+///
+/// # Errors
+/// Returns an error if the package is not found or installation fails.
 pub fn execute_install(name: Option<String>) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let lock = FrateLock::load_or_default(cwd.join("frate.lock"));
@@ -146,7 +168,13 @@ pub fn execute_install(name: Option<String>) -> Result<()> {
     }
     Ok(())
 }
-
+/// Uninstalls a specific package or all packages if none specified.
+///
+/// # Arguments
+/// * `name` - Optional package name to uninstall.
+///
+/// # Errors
+/// Returns an error if uninstallation fails.
 pub fn execute_uninstall(name: Option<String>) -> Result<()> {
     match name {
         Some(name) => {
@@ -160,7 +188,13 @@ pub fn execute_uninstall(name: Option<String>) -> Result<()> {
     }
     Ok(())
 }
-
+/// Prints paths of installed executable and shim for the given package name.
+///
+/// # Arguments
+/// * `name` - Name of the package.
+///
+/// # Errors
+/// Returns an error if path lookup fails.
 pub fn execute_which(name: &str) -> Result<()> {
     let (exe_path, shim_path) = find_installed_paths(name)
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
@@ -182,7 +216,14 @@ pub fn execute_which(name: &str) -> Result<()> {
     }
     Ok(())
 }
-
+/// Runs an installed executable with given arguments.
+///
+/// # Arguments
+/// * `name` - Name of the executable.
+/// * `args` - Arguments to pass to the executable.
+///
+/// # Errors
+/// Returns an error if execution fails or the executable is not found.
 pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
     let (exe_path, _) = find_installed_paths(&name)
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
@@ -202,14 +243,26 @@ pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
     println!("{}", String::from_utf8(output.stdout)?);
     Ok(())
 }
-
+/// Parses a string of the format "name@version" into a tuple.
+///
+/// # Arguments
+/// * `name_at_version` - The string to parse.
+///
+/// # Errors
+/// Returns an error if the format is invalid.
 fn extract_name_at_version(name_at_version: String) -> Result<(String, String)> {
     let mut split = name_at_version.split('@');
     let name = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
     let version = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
     Ok((name.to_string(), version.to_string()))
 }
-
+/// Adds a new dependency to `frate.toml`.
+///
+/// # Arguments
+/// * `name_at_version` - Dependency in the form "name@version".
+///
+/// # Errors
+/// Returns an error if parsing, loading, or saving fails.
 pub fn execute_add(name_at_version: String) -> Result<()> {
     let (name, version) = extract_name_at_version(name_at_version)?;
     let mut toml = FrateToml::load(std::env::current_dir()?.join("frate.toml"))
@@ -218,7 +271,13 @@ pub fn execute_add(name_at_version: String) -> Result<()> {
     toml.save(std::env::current_dir()?.join("frate.toml"))
         .map_err(|e| anyhow::anyhow!("{:?}", e))
 }
-
+/// Searches the registry for a tool and lists available versions.
+///
+/// # Arguments
+/// * `name` - Name of the tool to search for.
+///
+/// # Errors
+/// Returns an error if fetching or parsing registry data fails.
 pub fn execute_search(name: String) -> Result<()> {
     let tool = fetch_registry(&name)?;
     let sorted = sort_versions(tool.releases);

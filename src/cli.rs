@@ -9,48 +9,55 @@ pub struct CLI {
 
 #[derive(Debug, Subcommand, Clone, PartialEq)]
 pub enum FrateCommand {
-    /// Installs packages from the `frate.lock`. Defaults to all
+    /// Installs packages listed in the `frate.lock` file.
+    /// If no package name is specified, installs all packages.
     Install {
-        /// Install one specific package
+        /// Install a specific package by name.
         #[clap(long)]
         name: Option<String>,
     },
-    /// Uninstall packages. Defaults to all. This will remove the tool directory in `.frate/tools/`
-    /// and the shim in `.frate/shims/`
+    /// Uninstalls packages and removes related directories and shims.
+    /// If no package name is specified, uninstalls all packages.
     Uninstall {
-        /// Uninstall one specific package
+        /// Uninstall a specific package by name.
         #[clap(long)]
         name: Option<String>,
     },
-    /// Searches registries and outputs the available versions
+    /// Searches registries for a tool and lists available versions.
     Search {
         name: String,
     },
-    /// List all tools in `frate.toml`
+    /// Lists all tools defined in `frate.toml`.
+    /// Use verbose mode for detailed info including lock status and installation.
     List {
+        /// Enables verbose output.
         #[clap(short, long)]
         verbose: bool,
     },
-    /// Run the actual binary file of a tool in `.frate/bin/<tool_name>/`
+    /// Runs the executable binary of a tool from `.frate/bin/<tool_name>/`.
     Run {
+        /// Name of the tool to run.
         name: String,
+        /// Arguments passed to the tool executable.
         args: Vec<String>,
     },
-    /// Syncs the `frate.lock` with the `frate.toml`
+    /// Synchronizes the `frate.lock` file with the current `frate.toml`.
     Sync,
-    /// Initializes
+    /// Initializes a new `frate.toml` in the current directory.
     Init,
-    /// Check health (unimplemented!)
+    /// Checks the health of the setup. (Currently unimplemented)
     Doctor,
-    /// Cleans caches (unimplemented!)
+    /// Cleans caches related to the tool. (Currently unimplemented)
     Clean,
-    /// Adds a tool to the `frate.toml` and syncs the `frate.lock` file. The tool is not installed!
+    /// Adds a tool with a specific version to `frate.toml` and syncs the lock file.
+    /// Note: The tool is not installed automatically.
     Add {
-        /// Name and version of the package: <name>@<version> (no leading 'v' for versions)
+        /// Package name and version in the format `<name>@<version>` (version without leading 'v').
         name_at_version: String,
     },
-    /// Output the binaries and shims path if they exist
+    /// Outputs the paths to installed binaries and shims for a given tool, if found.
     Which {
+        /// Name of the tool to query.
         name: String,
     },
 }
