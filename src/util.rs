@@ -194,3 +194,10 @@ fn is_executable(path: &Path) -> bool {
         false
     }
 }
+
+#[cfg(windows)]
+pub fn is_power_shell() -> bool {
+    std::env::var("PSModulePath").is_ok() ||
+    std::env::var("PSVersionTable").is_ok() ||
+    std::env::var("Pwsh").is_ok()
+}

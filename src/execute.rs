@@ -1,9 +1,12 @@
 use std::process::Command;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
+use frate::shims::{run_shell_with_frate_path, write_windows_activate};
+#[cfg(unix)]
+use frate::shims::{write_unix_activate};
 use frate::toml::FrateToml;
 use frate::util::{ensure_frate_dirs, find_installed_paths, get_frate_toml, get_locked, is_installed, sort_versions};
 use crate::cli::{FrateCommand, CLI};
@@ -25,6 +28,10 @@ pub fn execute(cli: CLI) -> Result<()> {
                 set_verbosity!()
             }
             execute_list()
+        },
+        FrateCommand::Shell => {
+            set_verbosity!();
+            execute_shell()
         }
         FrateCommand::Init => {
             execute_init()
@@ -91,9 +98,9 @@ pub fn execute_list() -> Result<()> {
                 match locked {
                     Some(locked) => {
                         println!("   locked");
-                        verbose!(1, "   locked at: {}", locked.version);
-                        verbose!(1, "  # hash: {}", locked.hash);
-                        verbose!(1, "  source: {}", locked.source);
+                        verbose!(@lvl 1, "   locked at: {}", locked.version);
+                        verbose!(@lvl 1, "   hash: {}", locked.hash);
+                        verbose!(@lvl 1, "  󰳏 source: {}", locked.source);
                     },
                     None => {
                         println!("   unlocked");
@@ -127,6 +134,11 @@ pub fn execute_init() -> Result<()> {
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     let toml = FrateToml::default(name);
     toml.save(cwd.join("frate.toml")).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+
+    #[cfg(windows)]
+    write_windows_activate()?;
+    #[cfg(not(windows))]
+    write_unix_activate()?;
     Ok(())
 }
 /// Synchronizes the `frate.lock` file with the current `frate.toml`.
@@ -281,8 +293,12 @@ pub fn execute_search(name: String) -> Result<()> {
     let sorted = sort_versions(tool.releases);
     for (version, info) in sorted {
         println!("{name}@{version}");
-        println!("  {}", &info.url);
-        println!("  {}", &info.hash);
+        verbose!("  {}", &info.url);
+        verbose!("  {}", &info.hash);
     }
     Ok(())
+}
+
+pub fn execute_shell() -> Result<()> {
+    run_shell_with_frate_path().with_context(|| "Failed to run shell")
 }

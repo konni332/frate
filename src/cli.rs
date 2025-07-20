@@ -9,6 +9,8 @@ pub struct CLI {
 
 #[derive(Debug, Subcommand, Clone, PartialEq)]
 pub enum FrateCommand {
+    /// Uses the `activate` script to start a new shell with all installed tools in the `PATH`
+    Shell,
     /// Installs packages listed in the `frate.lock` file.
     /// If no package name is specified, installs all packages.
     Install {

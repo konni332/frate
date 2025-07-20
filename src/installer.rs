@@ -192,3 +192,4 @@ pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> R
     }
     Ok(())
 }
+
