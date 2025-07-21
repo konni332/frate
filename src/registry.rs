@@ -26,6 +26,16 @@ pub struct ReleaseInfo {
     /// The SHA-256 hash of the archive to verify integrity.
     pub hash: String,
 }
+
+impl ReleaseInfo {
+    pub fn default() -> Self {
+        Self {
+            url: "".to_string(),
+            hash: "".to_string(),
+        }
+    }   
+}
+
 /// A fully resolved dependency, ready to be downloaded and installed.
 ///
 /// This includes the expanded version (e.g., including `x86_64-unknown-linux-gnu`)

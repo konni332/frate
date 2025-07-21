@@ -6,6 +6,7 @@ use regex::Regex;
 use semver::Version;
 use walkdir::WalkDir;
 use crate::registry::ReleaseInfo;
+
 /// Ensures the `.frate` directory structure exists under the given root path.
 /// Creates `.frate/bin` and `.frate/shims` if they don't already exist.
 ///
@@ -200,4 +201,116 @@ pub fn is_power_shell() -> bool {
     std::env::var("PSModulePath").is_ok() ||
     std::env::var("PSVersionTable").is_ok() ||
     std::env::var("Pwsh").is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_ensure_frate_dirs_creates_directories() {
+        let dir = tempdir().unwrap();
+        let path = ensure_frate_dirs(dir.path()).unwrap();
+
+        assert!(path.exists());
+        assert!(path.join("bin").exists());
+        assert!(path.join("shims").exists());
+    }
+
+    #[test]
+    fn test_format_hash_removes_prefix() {
+        let input = "sha256:abcdef123456";
+        let expected = "abcdef123456";
+        assert_eq!(format_hash(input), expected);
+    }
+
+    #[test]
+    fn test_format_hash_without_prefix() {
+        let input = "abcdef123456";
+        assert_eq!(format_hash(input), input);
+    }
+
+    #[test]
+    fn test_expand_version_appends_triple() {
+        let version = "1.2.3";
+        let triple = current_target_triple();
+        let expected = format!("1.2.3-{}", triple);
+        assert_eq!(expand_version(version), expected);
+    }
+
+    #[test]
+    fn test_is_valid_version_valid() {
+        assert!(is_valid_version("1.2.3"));
+        assert!(is_valid_version("1.2.3-alpha")); // suffix is ignored
+    }
+
+    #[test]
+    fn test_is_valid_version_invalid() {
+        assert!(!is_valid_version("1.2")); // incomplete semver
+        assert!(!is_valid_version("not-a-version"));
+    }
+
+    use crate::ReleaseInfo;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_sort_versions_orders_correctly() {
+        let mut map = HashMap::new();
+        map.insert("1.0.0".to_string(), ReleaseInfo::default());
+        map.insert("1.2.0".to_string(), ReleaseInfo::default());
+        map.insert("1.1.0".to_string(), ReleaseInfo::default());
+
+        let sorted = sort_versions(map);
+        let versions: Vec<_> = sorted.iter().map(|(v, _)| v.clone()).collect();
+
+        assert_eq!(versions, vec!["1.0.0", "1.1.0", "1.2.0"]);
+    }
+
+    use crate::{FrateLock, LockedPackage};
+
+    fn mock_lock() -> FrateLock {
+        FrateLock {
+            packages: vec![
+                LockedPackage {
+                    name: "tool-a".to_string(),
+                    version: "1.0.0".to_string(),
+                    source: "".to_string(),
+                    hash: "".to_string(),
+                },
+                LockedPackage {
+                    name: "tool-b".to_string(),
+                    version: "2.0.0".to_string(),
+                    source: "".to_string(),
+                    hash: "".to_string(),
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn test_is_locked_true() {
+        let lock = mock_lock();
+        assert!(is_locked("tool-a", &lock));
+    }
+
+    #[test]
+    fn test_is_locked_false() {
+        let lock = mock_lock();
+        assert!(!is_locked("tool-x", &lock));
+    }
+
+    #[test]
+    fn test_get_locked_some() {
+        let lock = mock_lock();
+        let pkg = get_locked("tool-b", &lock);
+        assert!(pkg.is_some());
+        assert_eq!(pkg.unwrap().version, "2.0.0");
+    }
+
+    #[test]
+    fn test_get_locked_none() {
+        let lock = mock_lock();
+        assert!(get_locked("unknown", &lock).is_none());
+    }
 }

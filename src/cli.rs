@@ -22,7 +22,7 @@ pub enum FrateCommand {
     /// If no package name is specified, uninstalls all packages.
     Uninstall {
         /// Uninstall a specific package by name.
-        #[clap(long)]
+        #[clap(short, long)]
         name: Option<String>,
     },
     /// Searches registries for a tool and lists available versions.

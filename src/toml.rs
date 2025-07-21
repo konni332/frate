@@ -82,3 +82,76 @@ impl FrateToml {
         self.dependencies.remove(name);
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    // Helper: returns a FrateToml with one dep
+    fn sample_with_dep() -> FrateToml {
+        let mut frate = FrateToml::default("test");
+        frate.add("tool", "1.2.3").unwrap();
+        frate
+    }
+
+    #[test]
+    fn test_default() {
+        let frate = FrateToml::default("myproj");
+        assert_eq!(frate.project.name, "myproj");
+        assert_eq!(frate.project.version, "0.1.0");
+        assert!(frate.dependencies.is_empty());
+    }
+
+    #[test]
+    fn test_save_and_load() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("frate.toml");
+
+        let frate = sample_with_dep();
+        frate.save(&file_path).unwrap();
+
+        let loaded = FrateToml::load(&file_path).unwrap();
+        assert_eq!(loaded.project.name, "test");
+        assert_eq!(loaded.project.version, "0.1.0");
+        assert_eq!(loaded.dependencies.get("tool").unwrap(), "1.2.3");
+    }
+
+    #[test]
+    fn test_add_valid() {
+        let mut frate = FrateToml::default("x");
+        frate.add("foo", "1.0.0").unwrap();
+        assert_eq!(frate.dependencies.get("foo").unwrap(), "1.0.0");
+    }
+
+    #[test]
+    fn test_add_invalid_version() {
+        let mut frate = FrateToml::default("x");
+        let result = frate.add("foo", "bad.version");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_add_duplicate() {
+        let mut frate = FrateToml::default("x");
+        frate.add("foo", "1.0.0").unwrap();
+        let result = frate.add("foo", "1.0.0");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_remove_existing() {
+        let mut frate = sample_with_dep();
+        frate.remove("tool");
+        assert!(frate.dependencies.get("tool").is_none());
+    }
+
+    #[test]
+    fn test_remove_non_existing() {
+        let mut frate = FrateToml::default("x");
+        frate.remove("nonexistent");
+        // Should not panic or error
+        assert!(frate.dependencies.is_empty());
+    }
+}

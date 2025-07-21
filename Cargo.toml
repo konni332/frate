@@ -3,6 +3,10 @@ name = "frate"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "frate"
+path = "src/main.rs"
+
 [dependencies]
 serde = {version = "1.0.219", features = ["derive"]}
 serde_json = "1.0.140"
@@ -20,3 +24,7 @@ anyhow = "1.0.98"
 walkdir = "2.5.0"
 regex = "1.11.1"
 verbosio = { version = "0.3.0", features = ["color"] }
+
+[dev-dependencies]
+assert_cmd = "2.0.17"
+tempfile = "3.20.0"

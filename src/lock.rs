@@ -100,3 +100,47 @@ impl FrateLock {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+    use std::fs;
+
+    #[test]
+    fn test_load_or_default_returns_empty_on_missing_file() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("frate.lock");
+        let lock = FrateLock::load_or_default(&path);
+        assert_eq!(lock.packages.len(), 0);
+    }
+
+    #[test]
+    fn test_save_and_load_roundtrip() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("frate.lock");
+
+        let original = FrateLock {
+            packages: vec![LockedPackage {
+                name: "example".to_string(),
+                version: "1.2.3".to_string(),
+                source: "https://example.com".to_string(),
+                hash: "abc123".to_string(),
+            }],
+        };
+
+        original.save(&path).unwrap();
+        let loaded = FrateLock::load_or_default(&path);
+        assert_eq!(loaded.packages.len(), 1);
+        assert_eq!(loaded.packages[0].name, "example");
+    }
+
+    #[test]
+    fn test_load_or_default_returns_empty_on_invalid_toml() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("frate.lock");
+        fs::write(&path, "this is not valid toml").unwrap();
+
+        let lock = FrateLock::load_or_default(&path);
+        assert_eq!(lock.packages.len(), 0);
+    }
+}

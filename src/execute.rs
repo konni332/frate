@@ -16,10 +16,15 @@ use crate::cli::{FrateCommand, CLI};
 /// # Errors
 /// Returns an error if command execution fails or required files are missing.
 pub fn execute(cli: CLI) -> Result<()> {
-    if cli.command != FrateCommand::Init {
-        let toml_path = get_frate_toml()?;
-        if !toml_path.exists() {
-            bail!("frate.toml not found. Run `frate init` to create one.")
+    match &cli.command {
+        FrateCommand::Search { .. } |
+        FrateCommand::Shell |
+        FrateCommand::Init => {},
+        _ => {
+            let toml_path = get_frate_toml()?;
+            if !toml_path.exists() {
+                bail!("frate.toml not found. Run `frate init` to create one.")
+            }
         }
     }
     match cli.command {
@@ -168,7 +173,7 @@ pub fn execute_install(name: Option<String>) -> Result<()> {
         Some(name) => {
             let package = get_locked(&name, &lock)
                 .ok_or(anyhow::anyhow!("Package not found: {}", name))?;
-            install_package(&package, &cwd)
+            install_package(&package, &cwd.join(".frate"))
                 .map_err(|e| anyhow::anyhow!("{:?}", e))?;
         }
         None => {
