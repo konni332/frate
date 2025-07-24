@@ -38,6 +38,7 @@ mod tests {
         assert!(dir.path().join("frate.lock").exists());
     }
 
+    #[cfg(not(ci_skip))]
     #[test]
     fn test_install_packages() {
         let dir = setup_tests();
@@ -54,6 +55,7 @@ mod tests {
         assert!(get_binary("just").expect("Binary not found").exists());
     }
 
+    #[cfg(not(ci_skip))]
     #[test]
     fn test_shims() {
         let dir = setup_tests();

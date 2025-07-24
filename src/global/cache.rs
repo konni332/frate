@@ -14,7 +14,6 @@ pub fn get_cached_archive(url: &str) -> Result<Option<PathBuf>> {
         Ok(None)
     }
 }
-
 pub fn cache_archive(url: &str, bytes: &[u8]) -> Result<()>{
     let cache_dir = get_global_cache_dir()?;
     if !cache_dir.exists() {
