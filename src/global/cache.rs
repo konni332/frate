@@ -5,7 +5,7 @@ use walkdir::WalkDir;
 
 pub fn get_cached_archive(url: &str) -> Result<Option<PathBuf>> {
     let cache_dir = get_global_cache_dir()?;
-    let file_name = url.split('/').last().ok_or(anyhow!("Could not determine archive name"))?;
+    let file_name = url.split('/').next_back().ok_or(anyhow!("Could not determine archive name"))?;
     let archive_path = cache_dir.join(file_name);
     if archive_path.exists() {
         Ok(Some(archive_path))
@@ -22,7 +22,7 @@ pub fn cache_archive(url: &str, bytes: &[u8]) -> Result<()>{
             .with_context(|| format!("Could not create cache dir {:?}", cache_dir))?;
         println!("Cache directory created: {}", cache_dir.display());
     }
-    let file_name = url.split('/').last().ok_or(anyhow!("Could not determine archive name"))?;
+    let file_name = url.split('/').next_back().ok_or(anyhow!("Could not determine archive name"))?;
     let path = cache_dir.join(file_name);
     std::fs::File::create(&path)
         .with_context(|| format!("Could not create cache file {:?}", path))?;

@@ -49,21 +49,21 @@ mod cli_integration_tests {
 
         // Init (wenn dein CLI sowas hat, sonst erstelle frate.toml)
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("init")
             .assert()
             .success();
 
         // Add dependency
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
-            .args(&["add", "hello@1.0.0"])
+            .current_dir(dir_path)
+            .args(["add", "hello@1.0.0"])
             .assert()
             .success();
 
         // List dependencies (oder wie deine CLI es nennt)
         let output = Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("list")
             .assert()
             .success()
@@ -89,26 +89,26 @@ mod cli_integration_tests {
 
         // Init und Add für Setup
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("init")
             .assert()
             .success();
 
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .args(&["add", "just@1.42.1"])
             .assert()
             .success();
 
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("sync")
             .assert()
             .success();
 
         // Install specific package
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .args(&["install", "--name","just"])
             .assert()
             .success();
@@ -117,26 +117,26 @@ mod cli_integration_tests {
 
         // Uninstall specific package
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .args(&["uninstall", "--name", "just"])
             .assert()
             .success();
 
         // Install all packages
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("install")
             .assert()
             .success();
 
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .args(&["run", "just", "--", "--version"])
             .assert()
             .success();
 
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("which")
             .arg("just")
             .assert()
@@ -144,14 +144,14 @@ mod cli_integration_tests {
 
         // Uninstall all packages
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("uninstall")
             .assert()
             .success();
 
         // Clean `just` cache
         Command::cargo_bin("frate").unwrap()
-            .current_dir(&dir_path)
+            .current_dir(dir_path)
             .arg("clean")
             .arg("-n")
             .arg("just")

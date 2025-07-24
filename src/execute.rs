@@ -10,13 +10,13 @@ use frate::shims::{run_shell_with_frate_path, write_windows_activate};
 use frate::shims::{write_unix_activate};
 use frate::toml::FrateToml;
 use frate::util::{ensure_frate_dirs, find_installed_paths, get_frate_toml, get_locked, is_installed, sort_versions};
-use crate::cli::{FrateCommand, CLI};
+use crate::cli::{FrateCommand, Cli};
 
 /// Executes the given CLI command.
 ///
 /// # Errors
 /// Returns an error if command execution fails or required files are missing.
-pub fn execute(cli: CLI) -> Result<()> {
+pub fn execute(cli: Cli) -> Result<()> {
     match &cli.command {
         FrateCommand::Search { .. } |
         FrateCommand::Shell |
@@ -100,9 +100,8 @@ pub fn execute_list() -> Result<()> {
 
     for (name, version) in &toml.dependencies {
         println!("{}: {}", name, version);
-        match &lock {
-            Some(lock) => {
-                let locked = get_locked(name, &lock);
+        if let Some(lock) = &lock {
+                let locked = get_locked(name, lock);
                 match locked {
                     Some(locked) => {
                         print!("   locked");
@@ -129,8 +128,6 @@ pub fn execute_list() -> Result<()> {
                         print!("   not installed");
                     },
                 }
-            }
-            None => {}
         }
         println!();
     }
@@ -226,17 +223,11 @@ pub fn execute_which(name: &str) -> Result<()> {
         println!("No installed paths found");
         return Ok(());
     }
-    match exe_path {
-        Some(exe_path) => {
-            println!("Found executable at: {}", exe_path.display());
-        }
-        None => {}
+    if let Some(exe_path) = exe_path {
+        println!("Found executable at: {}", exe_path.display());
     }
-    match shim_path {
-        Some(shim_path) => {
-            println!("Found shim at: {}", shim_path.display());
-        }
-        None => {}
+    if let Some(shim_path) = shim_path {
+        println!("Found shim at: {}", shim_path.display());
     }
     Ok(())
 }
@@ -249,7 +240,7 @@ pub fn execute_which(name: &str) -> Result<()> {
 /// # Errors
 /// Returns an error if execution fails or the executable is not found.
 pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
-    let (exe_path, _) = find_installed_paths(&name)
+    let (exe_path, _) = find_installed_paths(name)
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     let exe_path = match exe_path {
         Some(exe_path) => {

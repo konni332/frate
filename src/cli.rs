@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser, Clone)]
 #[clap(author, version, about, long_about = None)]
-pub struct CLI {
+pub struct Cli {
     #[command(subcommand)]
     pub(crate) command: FrateCommand,
 }

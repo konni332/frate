@@ -27,8 +27,8 @@ pub struct ReleaseInfo {
     pub hash: String,
 }
 
-impl ReleaseInfo {
-    pub fn default() -> Self {
+impl Default for ReleaseInfo {
+    fn default() -> Self {
         Self {
             url: "".to_string(),
             hash: "".to_string(),
@@ -59,8 +59,7 @@ pub struct ResolvedDependency {
 /// # Arguments
 ///
 /// * `tool_name` – The name of the tool to resolve (e.g., `"ripgrep"`).
-/// * `version` – The version string to resolve. Can be a short version like `"1.2.3"`
-///               or a fully qualified triple like `"1.2.3-x86_64-unknown-linux-musl"`.
+/// * `version` – The version string to resolve. Can be a short version like `"1.2.3"` or a fully qualified triple like `"1.2.3-x86_64-unknown-linux-musl"`.
 ///
 /// # Errors
 ///

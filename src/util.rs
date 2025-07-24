@@ -32,10 +32,9 @@ pub fn ensure_frate_dirs<P: AsRef<Path>>(root: P) -> Result<PathBuf> {
 /// Strips the `sha256:` prefix from a hash if present.
 /// This is useful for formatting hashes uniformly.
 pub fn format_hash(hash: &str) -> String {
-    if hash.starts_with("sha256:") {
-        hash[7..].to_string()
-    }
-    else {
+    if let Some(hash) = hash.strip_prefix("sha256:") {
+        hash.to_string()
+    } else {
         hash.to_string()
     }
 }

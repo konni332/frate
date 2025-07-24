@@ -81,7 +81,7 @@ impl FrateLock {
             let resolved = match resolve_dependency(name, version_req) {
                 Ok(resolved) => resolved,
                 Err(e) => {
-                    eprintln!("Failed to resolve dependency: {}", e.to_string());
+                    eprintln!("Failed to resolve dependency: {}", e);
                     continue;
                 },
             };

@@ -149,7 +149,6 @@ pub fn write_windows_activate() -> std::io::Result<()> {
 /// use frate::run_shell_with_frate_path;
 /// run_shell_with_frate_path().unwrap();
 /// ```
-
 pub fn run_shell_with_frate_path() -> std::io::Result<()> {
     #[cfg(windows)]
     {
@@ -171,7 +170,7 @@ pub fn run_shell_with_frate_path() -> std::io::Result<()> {
     };
 
     Command::new(powershell)
-        .args(&[
+        .args([
             "-NoExit",
             "-Command",
             &format!(

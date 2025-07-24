@@ -144,7 +144,7 @@ mod tests {
     fn test_remove_existing() {
         let mut frate = sample_with_dep();
         frate.remove("tool");
-        assert!(frate.dependencies.get("tool").is_none());
+        assert!(!frate.dependencies.contains_key("tool"));
     }
 
     #[test]

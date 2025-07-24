@@ -54,7 +54,6 @@ pub fn install_packages<P: AsRef<Path>>(lock: &FrateLock, project_root: P) -> Re
 /// let frate_dir = PathBuf::from(".frate");
 /// install_package(&package, &frate_dir).unwrap();
 /// ```
-
 pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> {
     let bin_dir = frate_dir.join("bin");
     let shims_dir = frate_dir.join("shims");
@@ -66,7 +65,7 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
         extract_cached(cached_path, dest_dir, &package.hash)?;
     }
     else {
-        download_and_extract(url, &dest_dir.to_string_lossy().to_string(), &package.hash)?;
+        download_and_extract(url, &dest_dir.to_string_lossy(), &package.hash)?;
     }
     // create shim
     let shim_path = shims_dir.join(&package.name);
@@ -84,11 +83,11 @@ pub fn uninstall_packages() -> Result<()> {
     println!("Uninstalling all packages");
     let frate_dir = get_frate_dir()?;
 
-    std::fs::remove_dir_all(&frate_dir.join("bin"))?;
-    std::fs::remove_dir_all(&frate_dir.join("shims"))?;
+    std::fs::remove_dir_all(frate_dir.join("bin"))?;
+    std::fs::remove_dir_all(frate_dir.join("shims"))?;
 
-    std::fs::create_dir_all(&frate_dir.join("bin"))?;
-    std::fs::create_dir_all(&frate_dir.join("shims"))?;
+    std::fs::create_dir_all(frate_dir.join("bin"))?;
+    std::fs::create_dir_all(frate_dir.join("shims"))?;
     println!("Done");
     Ok(())
 }
@@ -110,7 +109,6 @@ pub fn uninstall_packages() -> Result<()> {
 ///
 /// uninstall_package("example").unwrap();
 /// ```
-
 pub fn uninstall_package(name: &str) -> Result<()> {
     println!("Uninstalling {}", name);
     let cwd = std::env::current_dir()?;
@@ -230,7 +228,7 @@ pub fn extract_cached<P: AsRef<Path>>(
             .last()
             .unwrap_or(
                 dest_dir.as_ref().display()
-                .to_string().split('.').last()
+                .to_string().split('.').next_back()
                 .unwrap_or(dest_dir.as_ref().display().to_string().as_str())
             )
         );

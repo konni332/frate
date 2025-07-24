@@ -4,7 +4,7 @@ use frate::toml::FrateToml;
 
 fn setup_tests() -> TempDir {
     let temp_dir = TempDir::new().unwrap();
-    let mut toml = FrateToml::default(&temp_dir.path().file_name().unwrap().to_string_lossy().to_string());
+    let mut toml = FrateToml::default(&temp_dir.path().file_name().unwrap().to_string_lossy());
     toml.dependencies.insert("just".to_string(), "1.42.1".to_string());
     toml.save(temp_dir.path().join("frate.toml").to_str().unwrap()).unwrap();
     temp_dir
