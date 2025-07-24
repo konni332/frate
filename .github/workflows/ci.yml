@@ -41,7 +41,7 @@ jobs:
         run: cargo build --all --verbose
 
       - name: Test
-        run: cargo test --all --verbose
+        run: cargo test --all --verbose -- --test-threads=1
 
   coverage:
     name: Coverage (Linux only)

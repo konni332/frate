@@ -5,7 +5,9 @@ use frate::installer::{install_package, install_packages, uninstall_package, uni
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
 use frate::{clean_cache, is_cached, remove_cached_archive};
-use frate::shims::{run_shell_with_frate_path, write_windows_activate};
+use frate::shims::{run_shell_with_frate_path};
+#[cfg(windows)]
+use frate::shims::{write_windows_activate};
 #[cfg(unix)]
 use frate::shims::{write_unix_activate};
 use frate::toml::FrateToml;
