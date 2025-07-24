@@ -46,15 +46,17 @@ jobs:
 
       - name: Run tests (Linux/macOS)
         if: runner.os != 'Windows'
-        run: cargo test --all --verbose -- --test-threads=1
-        env:
-          HOME: ${{ runner.temp }}/fakehome
+        run: |
+          export HOME="${{ runner.temp }}/fakehome"
+          mkdir -p "$HOME"
+          cargo test --all --verbose -- --test-threads=1
 
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
-        run: cargo test --all --verbose -- --test-threads=1
-        env:
-          USERPROFILE: ${{ runner.temp }}\\fakehome
+        run: |
+          $env:USERPROFILE = "${{ runner.temp }}\fakehome"
+          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE" | Out-Null
+          cargo test --all --verbose -- --test-threads=1
 
 
   coverage:
