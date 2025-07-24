@@ -49,8 +49,12 @@ pub enum FrateCommand {
     Init,
     /// Checks the health of the setup. (Currently unimplemented)
     Doctor,
-    /// Cleans caches related to the tool. (Currently unimplemented)
-    Clean,
+    /// Cleans global cache of a tool.
+    /// If no name is given, all caches are cleaned
+    Clean {
+        #[clap(short, long)]
+        name: Option<String>,
+    },
     /// Adds a tool with a specific version to `frate.toml` and syncs the lock file.
     /// Note: The tool is not installed automatically.
     Add {

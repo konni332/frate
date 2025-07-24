@@ -4,6 +4,7 @@ use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
+use frate::{clean_cache, remove_cached_archive};
 use frate::shims::{run_shell_with_frate_path, write_windows_activate};
 #[cfg(unix)]
 use frate::shims::{write_unix_activate};
@@ -51,8 +52,7 @@ pub fn execute(cli: CLI) -> Result<()> {
             execute_uninstall(name)
         }
         FrateCommand::Which { name } => {
-            let _ = execute_which(&name)?;
-            Ok(())
+            execute_which(&name)
         }
         FrateCommand::Run { name, args} => {
             execute_run(&name, args)
@@ -62,6 +62,9 @@ pub fn execute(cli: CLI) -> Result<()> {
         }
         FrateCommand::Search { name } => {
             execute_search(name)
+        }
+        FrateCommand::Clean { name } => {
+            execute_clean(name)
         }
         _ => {
             Ok(())
@@ -102,8 +105,8 @@ pub fn execute_list() -> Result<()> {
                 let locked = get_locked(name, &lock);
                 match locked {
                     Some(locked) => {
-                        println!("   locked");
-                        verbose!(@lvl 1, "   locked at: {}", locked.version);
+                        print!("   locked");
+                        verbose!(@lvl 1, " at: {}", locked.version);
                         verbose!(@lvl 1, "   hash: {}", locked.hash);
                         verbose!(@lvl 1, "  󰳏 source: {}", locked.source);
                     },
@@ -306,4 +309,14 @@ pub fn execute_search(name: String) -> Result<()> {
 
 pub fn execute_shell() -> Result<()> {
     run_shell_with_frate_path().with_context(|| "Failed to run shell")
+}
+
+pub fn execute_clean(name: Option<String>) -> Result<()> {
+    if let Some(name) = name {
+        remove_cached_archive(&name)?;
+    }
+    else { 
+        clean_cache()?;
+    }
+    Ok(())
 }

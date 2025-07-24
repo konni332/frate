@@ -7,6 +7,12 @@ use semver::Version;
 use walkdir::WalkDir;
 use crate::registry::ReleaseInfo;
 
+#[cfg(target_os = "windows")]
+pub const PATH_SEPARATOR: &str = "\\";
+
+#[cfg(not(target_os = "windows"))]
+pub const PATH_SEPARATOR: &str = "/";
+
 /// Ensures the `.frate` directory structure exists under the given root path.
 /// Creates `.frate/bin` and `.frate/shims` if they don't already exist.
 ///

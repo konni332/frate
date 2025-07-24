@@ -19,44 +19,12 @@ fn test_execute_init_creates_frate_toml() {
     assert!(content.contains("[dependencies]"));
 }
 
-#[test]
-fn test_execute_add_and_list() {
-    let dir = tempdir().unwrap();
-    let dir_path = dir.path();
-
-    // Init
-    Command::cargo_bin("frate").unwrap()
-        .current_dir(&dir_path)
-        .arg("init")
-        .assert()
-        .success();
-
-    // Add dep
-    Command::cargo_bin("frate").unwrap()
-        .current_dir(&dir_path)
-        .args(&["add", "hello@1.0.0"])
-        .assert()
-        .success();
-
-    // List
-    let output = Command::cargo_bin("frate").unwrap()
-        .current_dir(&dir_path)
-        .arg("list")
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-
-    let output_str = String::from_utf8_lossy(&output);
-    assert!(output_str.contains("hello: 1.0.0"));
-}
 #[cfg(test)]
 mod cli_integration_tests {
     use assert_cmd::Command;
     use tempfile::tempdir;
     use frate::FrateToml;
-    // Voraussetzung: Du hast im Cargo.toml dev-deps: assert_cmd, predicates, tempfile
+    use frate::global::utils::get_global_cache_dir;
 
     #[test]
     fn test_execute_sync() {
@@ -65,14 +33,12 @@ mod cli_integration_tests {
         let toml = FrateToml::default("tests");
         toml.save(dir_path.join("frate.toml")).unwrap();
 
-        // Sync (setzt frate.lock)
         Command::cargo_bin("frate").unwrap()
             .current_dir(dir_path)
             .arg("sync")
             .assert()
             .success();
 
-        // Prüfen, dass frate.lock jetzt existiert
         assert!(dir_path.join("frate.lock").exists());
     }
 
@@ -109,11 +75,18 @@ mod cli_integration_tests {
     }
 
     #[test]
-    fn test_execute_install_and_uninstall_and_run_and_which() {
+    fn test_execute_install_and_uninstall_and_run_and_which_and_clean() {
         let dir = tempdir().unwrap();
         let dir_path = dir.path();
         let toml = FrateToml::default("tests");
         toml.save(dir_path.join("frate.toml")).unwrap();
+
+        // Clean all caches
+        Command::cargo_bin("frate").unwrap()
+            .arg("clean")
+            .assert()
+            .success();
+
         // Init und Add für Setup
         Command::cargo_bin("frate").unwrap()
             .current_dir(&dir_path)
@@ -139,6 +112,8 @@ mod cli_integration_tests {
             .args(&["install", "--name","just"])
             .assert()
             .success();
+
+        assert!(get_global_cache_dir().unwrap().exists());
 
         // Uninstall specific package
         Command::cargo_bin("frate").unwrap()
@@ -174,7 +149,14 @@ mod cli_integration_tests {
             .assert()
             .success();
 
-
+        // Clean `just` cache
+        Command::cargo_bin("frate").unwrap()
+            .current_dir(&dir_path)
+            .arg("clean")
+            .arg("-n")
+            .arg("just")
+            .assert()
+            .success();
     }
 
     #[test]

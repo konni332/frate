@@ -24,6 +24,7 @@ anyhow = "1.0.98"
 walkdir = "2.5.0"
 regex = "1.11.1"
 verbosio = { version = "0.3.0", features = ["color"] }
+directories = "6.0.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"

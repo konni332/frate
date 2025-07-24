@@ -1,15 +1,12 @@
-use std::io::Cursor;
+use std::io::{Cursor};
 use std::path::{Path};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
 use crate::util::{ensure_frate_dirs, get_frate_dir};
 use anyhow::{bail, Result};
 use sha2::Digest;
-
-#[cfg(windows)]
-const EXEC_EXT: &str = "exe";
-#[cfg(not(windows))]
-const EXEC_EXT: &str = "";
+use crate::get_binary;
+use crate::global::cache::{cache_archive, get_cached_archive};
 
 /// Installs all packages listed in the lockfile by downloading and extracting them,
 /// and creating executable shims in the `.frate/shims` directory.
@@ -65,12 +62,15 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
     let url = &package.source;
     let dest_dir = bin_dir.join(&package.name);
     std::fs::create_dir_all(&dest_dir)?;
-    download_and_extract(url, &dest_dir.to_string_lossy().to_string(), &package.hash)?;
+    if let Some(cached_path) = get_cached_archive(&package.source)? {
+        extract_cached(cached_path, dest_dir, &package.hash)?;
+    }
+    else {
+        download_and_extract(url, &dest_dir.to_string_lossy().to_string(), &package.hash)?;
+    }
     // create shim
     let shim_path = shims_dir.join(&package.name);
-    let target_path = dest_dir
-        .join(&package.name)
-        .with_extension(EXEC_EXT);
+    let target_path = get_binary(&package.name)?;
     create_shim(target_path, shim_path)?;
     Ok(())
 }
@@ -178,17 +178,62 @@ pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> R
 
     println!("Extracting {} to {}", url, dest_dir);
     if url.ends_with(".zip") {
-        let reader = Cursor::new(bytes);
+        let reader = Cursor::new(&bytes);
         let mut zip = zip::ZipArchive::new(reader)?;
         zip.extract(dest_dir)?;
     }
     else if url.ends_with(".tar.gz") {
-        let tar = flate2::read::GzDecoder::new(Cursor::new(bytes));
+        let tar = flate2::read::GzDecoder::new(Cursor::new(&bytes));
         let mut archive = tar::Archive::new(tar);
         archive.unpack(dest_dir)?;
     }
     else {
-        bail!("Unsupported archive type");
+        bail!("Unsupported archive type: {}", url.split(crate::util::PATH_SEPARATOR).last().unwrap_or(url));
+    }
+    println!("Caching archive");
+    cache_archive(url, bytes.as_ref())?;
+    Ok(())
+}
+
+pub fn extract_cached<P: AsRef<Path>>(
+    cached_path: P,
+    dest_dir: P,
+    expected_hash: &str
+) -> Result<()> {
+    let expected_hash = crate::util::format_hash(expected_hash);
+    let archive_bytes = std::fs::read(&cached_path)?;
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(&archive_bytes);
+    let actual_hash = hex::encode(hasher.finalize());
+    if actual_hash != expected_hash {
+        bail!("Hash mismatch:\nexpected {}\ngot {}\nfor: {}", expected_hash, actual_hash, cached_path.as_ref().display());
+    }
+    let cached_path_str = cached_path.as_ref().to_string_lossy();
+    println!("Extracting from cache {} to {}", cached_path.as_ref().display(), dest_dir.as_ref().display());
+    if cached_path_str.ends_with(".zip") {
+        let reader = Cursor::new(archive_bytes);
+        let mut zip = zip::ZipArchive::new(reader)?;
+        zip.extract(dest_dir)?;
+    }
+    else if cached_path_str.ends_with(".tar.gz") {
+        let tar = flate2::read::GzDecoder::new(Cursor::new(archive_bytes));
+        let mut archive = tar::Archive::new(tar);
+        archive.unpack(dest_dir)?;
+    }
+    else {
+        bail!("Unsupported archive type: {}",
+            dest_dir
+            .as_ref()
+            .display()
+            .to_string()
+            .split(crate::util::PATH_SEPARATOR)
+            .last()
+            .unwrap_or(
+                dest_dir.as_ref().display()
+                .to_string().split('.').last()
+                .unwrap_or(dest_dir.as_ref().display().to_string().as_str())
+            )
+        );
     }
     Ok(())
 }

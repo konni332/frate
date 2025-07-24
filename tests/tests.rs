@@ -15,6 +15,7 @@ mod tests {
     use tempfile::TempDir;
     use frate::installer::install_packages;
     use frate::lock::FrateLock;
+    use frate::{get_binary};
     use frate::toml::FrateToml;
     use crate::setup_tests;
 
@@ -50,11 +51,7 @@ mod tests {
         install_packages(&lock, dir.path()).unwrap();
 
         // Check binary existence
-        #[cfg(target_os = "windows")]
-        assert!(dir.path().join(".frate").join("bin").join("just").join("just.exe").exists());
-
-        #[cfg(target_os = "linux")]
-        assert!(dir.path().join(".frate").join("bin").join("just").join("just").exists());
+        assert!(get_binary("just").expect("Binary not found").exists());
     }
 
     #[test]
