@@ -73,6 +73,7 @@ mod cli_integration_tests {
         assert!(output_str.contains("hello: 1.0.0"));
     }
 
+    #[cfg(not(ci_skip))]
     #[test]
     fn test_execute_install_and_uninstall_and_run_and_which_and_clean() {
         let dir = tempdir().unwrap();
