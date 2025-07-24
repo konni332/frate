@@ -22,6 +22,7 @@ pub fn execute(cli: Cli) -> Result<()> {
     match &cli.command {
         FrateCommand::Search { .. } |
         FrateCommand::Shell |
+        FrateCommand::Clean { .. } |
         FrateCommand::Init => {},
         _ => {
             let toml_path = get_frate_toml()?;
