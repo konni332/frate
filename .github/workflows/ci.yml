@@ -46,12 +46,12 @@ jobs:
 
       - name: Run tests (Linux/macOS)
         if: runner.os != 'Windows'
-        run: cargo test --all --verbose -- --test-threads=1 --cfg ci_skip
+        run: cargo test --all --verbose --cfg ci_skip -- --test-threads=1
 
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cargo test --all --verbose -- --test-threads=1 --cfg ci_skip
+        run: cargo test --all --verbose --cfg ci_skip -- --test-threads=1
 
 
   coverage:
@@ -72,7 +72,7 @@ jobs:
         run: cargo install cargo-tarpaulin
 
       - name: Run tests with coverage
-        run: cargo test --all --verbose -- --test-threads=1 --cfg ci_skip
+        run: cargo test --all --verbose --cfg ci_skip -- --test-threads=1
 
 
       - name: Upload coverage report
