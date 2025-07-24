@@ -46,16 +46,13 @@ jobs:
 
       - name: Run tests (Linux/macOS)
         if: runner.os != 'Windows'
-        run: |
-          export HOME="${{ runner.temp }}/fakehome"
-          mkdir -p "$HOME"
-          cargo test --all --verbose -- --test-threads=1
+        run: HOME=${{ runner.temp }}/fakehome cargo test --all --verbose -- --test-threads=1
 
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           $env:USERPROFILE = "${{ runner.temp }}\fakehome"
-          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE" | Out-Null
           cargo test --all --verbose -- --test-threads=1
 
 
@@ -77,10 +74,8 @@ jobs:
         run: cargo install cargo-tarpaulin
 
       - name: Run tests with coverage
-        run: |
-          export HOME="${{ runner.temp }}/fakehome"
-          mkdir -p "$HOME"
-          cargo test --all --verbose -- --test-threads=1
+        run: HOME=${{ runner.temp }}/fakehome cargo test --all --verbose -- --test-threads=1
+
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
