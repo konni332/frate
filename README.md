@@ -190,6 +190,26 @@ If you're unsure where to start, check the [issues](https://github.com/konni332/
 
 ---
 
+## Bug-Reports
+
+🐛 Reporting Bugs
+
+If you encounter a bug, please help improve Frate by reporting it.
+
+Before submitting, make sure to:
+
+1. Check the existing issues – your problem might already be reported.
+
+2. Use a clear and descriptive title.
+
+3. Include steps to reproduce the bug, your platform and OS, and any relevant logs or screenshots.
+
+4. If possible, test against the latest ``master`` branch to see if the bug still occurs.
+
+5. Create a [new issue](./.github/ISSUE_TEMPLATE/bug_report.md)
+
+Thanks for helping make Frate better!
+
 ## License
 
 This Project is licensed under either of:

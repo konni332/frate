@@ -2,6 +2,16 @@
 name = "frate"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/konni332/frate"
+homepage = "https://github.com/konni332/frate"
+documentation = "https://github.com/konni332/frate#readme"
+description = "A local, dev-focused package manager for developer tools, inspired by Scoop and Cargo"
+keywords = ["package-manager", "devtools", "cli", "installer", "rust"]
+categories = ["development-tools", "command-line-utilities"]
+readme = "README.md"
+include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE-*",]
+
 
 [[bin]]
 name = "frate"
