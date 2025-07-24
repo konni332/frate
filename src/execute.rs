@@ -106,15 +106,16 @@ pub fn execute_list() -> Result<()> {
                 match locked {
                     Some(locked) => {
                         print!("   locked");
-                        match is_cached(format!("{}-{}", locked.name, locked.version ).as_str()) {
-                            Ok(true) => {
-                                print!(" 󰃨 cached");
-                            }
-                            _ => {}
-                        }
                         verbose!(@lvl 1, " at: {}", locked.version);
                         verbose!(@lvl 1, "   hash: {}", locked.hash);
                         verbose!(@lvl 1, "  󰳏 source: {}", locked.source);
+                        match is_cached(format!("{}-{}", locked.name, locked.version ).as_str()) {
+                            Ok(true) => {
+                                println!("  󰃨 cached");
+                            }
+                            _ => {}
+                        }
+
                     },
                     None => {
                         println!("   unlocked");
