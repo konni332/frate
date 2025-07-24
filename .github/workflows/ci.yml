@@ -27,6 +27,9 @@ jobs:
           default: true
           components: rustfmt, clippy
 
+      - name: Ensure Rust is globally available
+        run: rustup default stable
+
       - name: Cache cargo
         uses: actions/cache@v4
         with:
