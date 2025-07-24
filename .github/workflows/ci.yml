@@ -39,9 +39,19 @@ jobs:
 
       - name: Build
         run: cargo build --all --verbose
-
-      - name: Test
+      
+      - name: Run tests (Linux/macOS)
+        if: runner.os != 'Windows'
         run: cargo test --all --verbose -- --test-threads=1
+        env:
+          HOME: ${{ runner.temp }}/fakehome
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        run: cargo test --all --verbose -- --test-threads=1
+        env:
+          USERPROFILE: ${{ runner.temp }}\\fakehome
+
 
   coverage:
     name: Coverage (Linux only)
@@ -62,6 +72,8 @@ jobs:
 
       - name: Run tests with coverage
         run: cargo tarpaulin --out Html
+        env:
+          HOME: ${{ runner.temp }}/fakehome
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

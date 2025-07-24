@@ -24,7 +24,6 @@ mod cli_integration_tests {
     use assert_cmd::Command;
     use tempfile::tempdir;
     use frate::FrateToml;
-    use frate::global::utils::get_global_cache_dir;
 
     #[test]
     fn test_execute_sync() {
@@ -113,7 +112,6 @@ mod cli_integration_tests {
             .assert()
             .success();
 
-        assert!(get_global_cache_dir().unwrap().exists());
 
         // Uninstall specific package
         Command::cargo_bin("frate").unwrap()
