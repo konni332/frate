@@ -1,5 +1,6 @@
 use std::path::Path;
 use anyhow::Result;
+#[cfg(windows)]
 use crate::is_power_shell;
 
 /// Creates a platform-specific "shim" to forward execution to a target binary.
