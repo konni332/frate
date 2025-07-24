@@ -42,6 +42,8 @@ mod tests {
     #[test]
     fn test_install_packages() {
         let dir = setup_tests();
+        let old_cwd = std::env::current_dir().unwrap();
+        std::env::set_current_dir(dir.path()).unwrap();
         let toml_path = dir.path().join("frate.toml");
         let toml = FrateToml::load(toml_path.to_str().unwrap()).expect("frate.toml not found");
 
@@ -53,12 +55,15 @@ mod tests {
 
         // Check binary existence
         assert!(get_binary("just").expect("Binary not found").exists());
+        std::env::set_current_dir(old_cwd).unwrap();
     }
 
     #[cfg(not(ci_skip))]
     #[test]
     fn test_shims() {
         let dir = setup_tests();
+        let old_cwd = std::env::current_dir().unwrap();
+        std::env::set_current_dir(dir.path()).unwrap();
         let toml_path = dir.path().join("frate.toml");
         let toml = FrateToml::load(toml_path.to_str().unwrap()).expect("frate.toml not found");
 
@@ -107,6 +112,7 @@ mod tests {
 
             assert!(output.status.success(), "Shim execution failed");
         }
+        std::env::set_current_dir(old_cwd).unwrap();
     }
 
     #[test]
