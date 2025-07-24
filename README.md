@@ -1,6 +1,6 @@
 [![CI](https://github.com/konni332/frate/actions/workflows/ci.yml/badge.svg)](https://github.com/konni332/frate/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/main/LICENSE-MIT)
-[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/main/LICENSE-APACHE)
+[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/master/LICENSE-MIT)
+[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/master/LICENSE-APACHE)
 
 # frate
 **frate** is a developer tool and package manager designed for managing local software installations
