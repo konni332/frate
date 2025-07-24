@@ -54,3 +54,19 @@ pub fn remove_cached_archive(name: &str) -> Result<()> {
     }
     Ok(())
 }
+
+pub fn is_cached(full_name: &str) -> Result<bool> {
+    let cache_dir = get_global_cache_dir()?;
+    if !cache_dir.exists() {
+        return Ok(false);
+    }
+    let dir = WalkDir::new(&cache_dir);
+    for entry in dir {
+        let entry = entry?;
+        let path = entry.path();
+        if path.to_string_lossy().contains(full_name) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}

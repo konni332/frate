@@ -8,7 +8,7 @@ use sha2::Digest;
 use crate::get_binary;
 use crate::global::cache::{cache_archive, get_cached_archive};
 
-/// Installs all packages listed in the lockfile by downloading and extracting them,
+/// Installs all packages listed in the lockfile by downloading and extracting them
 /// and creating executable shims in the `.frate/shims` directory.
 ///
 /// # Arguments
@@ -74,7 +74,7 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
     create_shim(target_path, shim_path)?;
     Ok(())
 }
-/// Uninstalls all installed packages by removing `.frate/bin` and `.frate/shims` directories,
+/// Uninstalls all installed packages by removing `.frate/bin` and `.frate/shims` directories
 /// and recreating them empty.
 ///
 /// # Errors

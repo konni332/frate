@@ -4,7 +4,7 @@ use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
-use frate::{clean_cache, remove_cached_archive};
+use frate::{clean_cache, is_cached, remove_cached_archive};
 use frate::shims::{run_shell_with_frate_path, write_windows_activate};
 #[cfg(unix)]
 use frate::shims::{write_unix_activate};
@@ -106,6 +106,12 @@ pub fn execute_list() -> Result<()> {
                 match locked {
                     Some(locked) => {
                         print!("   locked");
+                        match is_cached(format!("{}-{}", locked.name, locked.version ).as_str()) {
+                            Ok(true) => {
+                                print!(" 󰃨 cached");
+                            }
+                            _ => {}
+                        }
                         verbose!(@lvl 1, " at: {}", locked.version);
                         verbose!(@lvl 1, "   hash: {}", locked.hash);
                         verbose!(@lvl 1, "  󰳏 source: {}", locked.source);
@@ -116,13 +122,12 @@ pub fn execute_list() -> Result<()> {
                 }
                 match is_installed(name) {
                     true => {
-                        println!("   installed");
+                        print!("   installed");
                     },
                     false => {
-                        println!("   not installed");
+                        print!("   not installed");
                     },
                 }
-
             }
             None => {}
         }
@@ -315,7 +320,7 @@ pub fn execute_clean(name: Option<String>) -> Result<()> {
     if let Some(name) = name {
         remove_cached_archive(&name)?;
     }
-    else { 
+    else {
         clean_cache()?;
     }
     Ok(())
