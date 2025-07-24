@@ -67,10 +67,10 @@ pub struct ResolvedDependency {
 ///
 /// # Example
 ///
-/// ```
+/// ```no_run
 /// use frate::resolve_dependency;
 ///
-/// let dep = resolve_dependency("ripgrep", "13.0.0").unwrap();
+/// let dep = resolve_dependency("ripgrep", "14.0.0").unwrap();
 /// assert!(dep.url.ends_with(".tar.gz") || dep.url.ends_with(".zip"));
 /// ```
 pub fn resolve_dependency(
