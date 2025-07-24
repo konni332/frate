@@ -65,5 +65,8 @@ pub enum FrateCommand {
     Which {
         /// Name of the tool to query.
         name: String,
+        /// Show the full paths of the found bin and shim/.bat
+        #[clap(short, long)]
+        verbose: bool,
     },
 }

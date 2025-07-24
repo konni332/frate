@@ -91,6 +91,14 @@ pub fn find_installed_paths(
 ) -> Result<(Option<PathBuf>, Option<PathBuf>)> {
     let cwd = std::env::current_dir()?;
     let exe_path = get_binary(name)?;
+    let exe_path = match exe_path {
+        Some(exe_path) => {
+            exe_path
+        },
+        None => {
+            return Ok((None, None));
+        }
+    };
     let exe_found = exe_path.exists();
 
     #[cfg(target_os = "windows")]
@@ -153,8 +161,11 @@ pub fn is_valid_version(version: &str) -> bool {
 /// Picks the first executable that matches the tool name heuristically.
 ///
 /// Returns an error if no suitable binary is found.
-pub fn get_binary(name: &str) -> Result<PathBuf> {
+pub fn get_binary(name: &str) -> Result<Option<PathBuf>> {
     let path = get_frate_bin_dir()?.join(name);
+    if !path.exists() {
+        return Ok(None);
+    }
     let entries = WalkDir::new(&path);
     let mut candidates = Vec::new();
 
@@ -180,7 +191,7 @@ pub fn get_binary(name: &str) -> Result<PathBuf> {
             10
         }
     });
-    Ok(candidates.remove(0))
+    Ok(Some(candidates.remove(0)))
 }
 /// Checks if a given path is an executable file on Unix.
 #[cfg(unix)]

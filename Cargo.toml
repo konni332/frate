@@ -30,11 +30,12 @@ sha2 = "0.11.0-rc.0"
 hex = "0.4.3"
 clap = {version = "4.5.41", features = ["derive"]}
 semver = "1.0.26"
-anyhow = "1.0.98"
+anyhow = {version = "1.0.98"}
 walkdir = "2.5.0"
 regex = "1.11.1"
 verbosio = { version = "0.3.0", features = ["color"] }
 directories = "6.0.0"
+colored = "3.0.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"
