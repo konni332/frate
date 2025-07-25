@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::registry::resolve_dependency;
 use crate::toml::FrateToml;
 use anyhow::Result;
+use colored::Colorize;
 
 /// Represents the contents of a `frate.lock` file.
 /// It contains an exact snapshot of all locked packages used in the project.
@@ -81,7 +82,7 @@ impl FrateLock {
             let resolved = match resolve_dependency(name, version_req) {
                 Ok(resolved) => resolved,
                 Err(e) => {
-                    eprintln!("Failed to resolve dependency: {}", e);
+                    eprintln!("{} {}", "Failed to resolve dependency".red(), e.to_string().red());
                     continue;
                 },
             };

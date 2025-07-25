@@ -54,7 +54,7 @@ mod tests {
         install_packages(&lock, dir.path()).unwrap();
 
         // Check binary existence
-        assert!(get_binary("just").expect("Binary not found").exists());
+        assert!(get_binary("just").expect("Binary not found").unwrap().exists());
         std::env::set_current_dir(old_cwd).unwrap();
     }
 

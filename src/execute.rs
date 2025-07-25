@@ -1,5 +1,7 @@
 use std::process::Command;
 use anyhow::{bail, Context, Result};
+use colored::Colorize;
+use serde::Deserialize;
 use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
@@ -54,7 +56,10 @@ pub fn execute(cli: Cli) -> Result<()> {
         FrateCommand::Uninstall { name } => {
             execute_uninstall(name)
         }
-        FrateCommand::Which { name } => {
+        FrateCommand::Which { name, verbose } => {
+            if verbose {
+                set_verbosity!();
+            }
             execute_which(&name)
         }
         FrateCommand::Run { name, args} => {
@@ -68,6 +73,12 @@ pub fn execute(cli: Cli) -> Result<()> {
         }
         FrateCommand::Clean { name } => {
             execute_clean(name)
+        }
+        FrateCommand::Registry { verbose } => {
+            if verbose {
+                set_verbosity!();
+            }
+            execute_registry()
         }
         _ => {
             Ok(())
@@ -97,38 +108,38 @@ pub fn execute_list() -> Result<()> {
     };
 
     if toml.dependencies.is_empty() {
-        println!("No dependencies");
+        println!("{}", "No dependencies".yellow());
         return Ok(());
     }
 
     for (name, version) in &toml.dependencies {
-        println!("{}: {}", name, version);
+        println!("{}: {}", name.bold(), version.bold());
         if let Some(lock) = &lock {
                 let locked = get_locked(name, lock);
                 match locked {
                     Some(locked) => {
-                        print!("   locked");
-                        verbose!(@lvl 1, " at: {}", locked.version);
-                        verbose!(@lvl 1, "   hash: {}", locked.hash);
-                        verbose!(@lvl 1, "  󰳏 source: {}", locked.source);
+                        print!("  {}", " locked".green());
+                        verbose!(@lvl 1, " {} {}", "at:".green(), locked.version.green());
+                        verbose!(@lvl 1, "  {} {}", " hash:".green(), locked.hash.green());
+                        verbose!(@lvl 1, "  {} {}", "󰳏 source:".cyan(), locked.source.cyan());
                         match is_cached(format!("{}-{}", locked.name, locked.version ).as_str()) {
                             Ok(true) => {
-                                println!("  󰃨 cached");
+                                println!("  {}", "󰃨 cached".green());
                             }
                             _ => {}
                         }
 
                     },
                     None => {
-                        println!("   unlocked");
+                        println!("  {}", " unlocked".yellow());
                     }
                 }
                 match is_installed(name) {
                     true => {
-                        print!("   installed");
+                        print!("  {}", " installed".green());
                     },
                     false => {
-                        print!("   not installed");
+                        print!("  {}", " not installed".red());
                     },
                 }
         }
@@ -220,17 +231,18 @@ pub fn execute_uninstall(name: Option<String>) -> Result<()> {
 /// # Errors
 /// Returns an error if path lookup fails.
 pub fn execute_which(name: &str) -> Result<()> {
-    let (exe_path, shim_path) = find_installed_paths(name)
-        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    let (exe_path, shim_path) = find_installed_paths(name)?;
     if exe_path.is_none() && shim_path.is_none() {
-        println!("No installed paths found");
+        println!("{}", "No installed paths found".yellow());
         return Ok(());
     }
     if let Some(exe_path) = exe_path {
-        println!("Found executable at: {}", exe_path.display());
+        println!("{}", "bin found".green());
+        verbose!("  {}", exe_path.to_string_lossy().green());
     }
     if let Some(shim_path) = shim_path {
-        println!("Found shim at: {}", shim_path.display());
+        println!("{}", "shim found".green());
+        verbose!("  {}", shim_path.to_string_lossy().green());
     }
     Ok(())
 }
@@ -243,8 +255,7 @@ pub fn execute_which(name: &str) -> Result<()> {
 /// # Errors
 /// Returns an error if execution fails or the executable is not found.
 pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
-    let (exe_path, _) = find_installed_paths(name)
-        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    let (exe_path, _) = find_installed_paths(name)?;
     let exe_path = match exe_path {
         Some(exe_path) => {
             exe_path
@@ -256,7 +267,7 @@ pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
     let output = Command::new(exe_path)
         .args(args).output()?;
     if !output.status.success() {
-        bail!("{}", String::from_utf8(output.stderr)?);
+        bail!("{}", String::from_utf8(output.stderr)?.red());
     }
     println!("{}", String::from_utf8(output.stdout)?);
     Ok(())
@@ -300,9 +311,9 @@ pub fn execute_search(name: String) -> Result<()> {
     let tool = fetch_registry(&name)?;
     let sorted = sort_versions(tool.releases);
     for (version, info) in sorted {
-        println!("{name}@{version}");
-        verbose!("  {}", &info.url);
-        verbose!("  {}", &info.hash);
+        println!("{}{}{}", name.bold(), "@".bold(), version.bold());
+        verbose!("  {}", &info.url.cyan());
+        verbose!("  {}", &info.hash.cyan());
     }
     Ok(())
 }
@@ -317,6 +328,28 @@ pub fn execute_clean(name: Option<String>) -> Result<()> {
     }
     else {
         clean_cache()?;
+    }
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+struct ToolInfo {
+    name: String,
+    repo: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RegistryIndex {
+    registered: Vec<ToolInfo>,
+}
+
+pub fn execute_registry() -> Result<()> {
+    let url = "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/registry.json";
+    let resp = reqwest::blocking::get(url)?;
+    let registry: RegistryIndex = serde_json::from_reader(resp)?;
+    for tool in &registry.registered {
+        println!("{}", tool.name.bold());
+        verbose!("  {}", tool.repo.cyan());
     }
     Ok(())
 }

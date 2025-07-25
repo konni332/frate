@@ -3,8 +3,10 @@ use std::path::{Path};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
 use crate::util::{ensure_frate_dirs, get_frate_dir};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
+use colored::Colorize;
 use sha2::Digest;
+use verbosio::verbose;
 use crate::get_binary;
 use crate::global::cache::{cache_archive, get_cached_archive};
 
@@ -69,7 +71,8 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
     }
     // create shim
     let shim_path = shims_dir.join(&package.name);
-    let target_path = get_binary(&package.name)?;
+    let target_path = get_binary(&package.name)?
+        .ok_or(anyhow!("Binary not found: {}", package.name))?;
     create_shim(target_path, shim_path)?;
     Ok(())
 }
@@ -80,7 +83,7 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
 ///
 /// Returns an error if the directories cannot be removed or recreated.
 pub fn uninstall_packages() -> Result<()> {
-    println!("Uninstalling all packages");
+    println!("{}", "Uninstalling all packages".bold().yellow());
     let frate_dir = get_frate_dir()?;
 
     std::fs::remove_dir_all(frate_dir.join("bin"))?;
@@ -88,7 +91,7 @@ pub fn uninstall_packages() -> Result<()> {
 
     std::fs::create_dir_all(frate_dir.join("bin"))?;
     std::fs::create_dir_all(frate_dir.join("shims"))?;
-    println!("Done");
+    println!("{}", "Done".bold().green());
     Ok(())
 }
 /// Uninstalls a single package by removing its directory under `.frate/bin/{name}`
@@ -110,7 +113,7 @@ pub fn uninstall_packages() -> Result<()> {
 /// uninstall_package("example").unwrap();
 /// ```
 pub fn uninstall_package(name: &str) -> Result<()> {
-    println!("Uninstalling {}", name);
+    println!("{} {}", "Uninstalling".bold().yellow(), name);
     let cwd = std::env::current_dir()?;
     let frate_dir = cwd.join(".frate");
     let bin_dir = frate_dir.join("bin");
@@ -137,7 +140,7 @@ pub fn uninstall_package(name: &str) -> Result<()> {
             std::fs::remove_file(shim_path)?;
         }
     }
-    println!("Done");
+    println!("{}", "Done".bold().green());
     Ok(())
 }
 /// Downloads an archive from a given URL, verifies its SHA-256 hash, and extracts it to the given directory.
@@ -158,10 +161,10 @@ pub fn uninstall_package(name: &str) -> Result<()> {
 /// - or extraction fails.
 pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> Result<()> {
     let expected_hash = crate::util::format_hash(expected_hash);
-    println!("Downloading {}", url);
+    println!("{} {}", "Downloading".bold().green(), url);
     let response = reqwest::blocking::get(url)?;
     if !response.status().is_success() {
-        bail!("Failed to download {}: {}", url, response.status());
+        bail!("{} {}: {}", "Failed to download".bold().red(), url, response.status());
     }
     let bytes = response.bytes()?;
 
@@ -171,10 +174,10 @@ pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> R
     let actual_hash = hex::encode(hasher.finalize());
 
     if actual_hash != expected_hash {
-        bail!("Hash mismatch: expected {}, got {}", expected_hash, actual_hash);
+        bail!("{}\nexpected {}\ngot {}", "Hash mismatch:".bold().red(), expected_hash, actual_hash);
     }
 
-    println!("Extracting {} to {}", url, dest_dir);
+    verbose!("{} {} to {}", "Extracting".bold().green(), url, dest_dir);
     if url.ends_with(".zip") {
         let reader = Cursor::new(&bytes);
         let mut zip = zip::ZipArchive::new(reader)?;
@@ -188,7 +191,7 @@ pub fn download_and_extract(url: &str, dest_dir: &str, expected_hash: &str) -> R
     else {
         bail!("Unsupported archive type: {}", url.split(crate::util::PATH_SEPARATOR).last().unwrap_or(url));
     }
-    println!("Caching archive");
+    verbose!("{}", "Caching archive".bold().green());
     cache_archive(url, bytes.as_ref())?;
     Ok(())
 }
@@ -207,7 +210,7 @@ pub fn extract_cached<P: AsRef<Path>>(
         bail!("Hash mismatch:\nexpected {}\ngot {}\nfor: {}", expected_hash, actual_hash, cached_path.as_ref().display());
     }
     let cached_path_str = cached_path.as_ref().to_string_lossy();
-    println!("Extracting from cache {} to {}", cached_path.as_ref().display(), dest_dir.as_ref().display());
+    verbose!("{} from cache {} to {}", "Extracting".bold().green(), cached_path.as_ref().display(), dest_dir.as_ref().display());
     if cached_path_str.ends_with(".zip") {
         let reader = Cursor::new(archive_bytes);
         let mut zip = zip::ZipArchive::new(reader)?;
