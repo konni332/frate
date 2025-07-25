@@ -1,6 +1,7 @@
 use std::process::Command;
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
+use serde::Deserialize;
 use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
@@ -72,6 +73,12 @@ pub fn execute(cli: Cli) -> Result<()> {
         }
         FrateCommand::Clean { name } => {
             execute_clean(name)
+        }
+        FrateCommand::Registry { verbose } => {
+            if verbose {
+                set_verbosity!();
+            }
+            execute_registry()
         }
         _ => {
             Ok(())
@@ -321,6 +328,28 @@ pub fn execute_clean(name: Option<String>) -> Result<()> {
     }
     else {
         clean_cache()?;
+    }
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+struct ToolInfo {
+    name: String,
+    repo: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct RegistryIndex {
+    registered: Vec<ToolInfo>,
+}
+
+pub fn execute_registry() -> Result<()> {
+    let url = "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/registry.json";
+    let resp = reqwest::blocking::get(url)?;
+    let registry: RegistryIndex = serde_json::from_reader(resp)?;
+    for tool in &registry.registered {
+        println!("{}", tool.name.bold());
+        verbose!("  {}", tool.repo.cyan());
     }
     Ok(())
 }

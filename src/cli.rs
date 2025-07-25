@@ -69,4 +69,9 @@ pub enum FrateCommand {
         #[clap(short, long)]
         verbose: bool,
     },
+    /// Outputs a list of all registered tools
+    Registry {
+        #[clap(short, long)]
+        verbose: bool,
+    },
 }
