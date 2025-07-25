@@ -314,15 +314,17 @@ pub fn execute_search(name: String, versions: usize) -> Result<()> {
     let tool = fetch_registry(&name)?;
     let sorted = sort_versions(tool.releases);
     let filtered = filter_versions(sorted);
-    if filtered.is_empty() {
-        println!("{}", "No versions found for:".yellow());
-        println!("  {}", std::env::consts::OS.yellow());
-        println!("  {}", std::env::consts::ARCH.yellow());
-        return Ok(());
-    }
+    
     println!("{}", name.bold());
     if let Some(desc) = fetch_description(tool.repo.as_str())? {
         println!("  {}", desc.dimmed());
+    }
+
+    if filtered.is_empty() {
+        println!("  {}", "No versions found for:".yellow());
+        println!("      {}", std::env::consts::OS.yellow());
+        println!("      {}", std::env::consts::ARCH.yellow());
+        return Ok(());
     }
     let (latest_version, latest_info) = filtered.last().unwrap();
     println!("  {}", "latest:".bold());
