@@ -6,7 +6,7 @@ use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
-use frate::{clean_cache, is_cached, remove_cached_archive};
+use frate::{clean_cache, fetch_description, filter_versions, is_cached, remove_cached_archive};
 use frate::shims::{run_shell_with_frate_path};
 #[cfg(windows)]
 use frate::shims::{write_windows_activate};
@@ -68,8 +68,11 @@ pub fn execute(cli: Cli) -> Result<()> {
         FrateCommand::Add { name_at_version } => {
             execute_add(name_at_version)
         }
-        FrateCommand::Search { name } => {
-            execute_search(name)
+        FrateCommand::Search { name, versions, verbose } => {
+            if verbose {
+                set_verbosity!();
+            }
+            execute_search(name, versions)
         }
         FrateCommand::Clean { name } => {
             execute_clean(name)
@@ -307,13 +310,34 @@ pub fn execute_add(name_at_version: String) -> Result<()> {
 ///
 /// # Errors
 /// Returns an error if fetching or parsing registry data fails.
-pub fn execute_search(name: String) -> Result<()> {
+pub fn execute_search(name: String, versions: usize) -> Result<()> {
     let tool = fetch_registry(&name)?;
     let sorted = sort_versions(tool.releases);
-    for (version, info) in sorted {
-        println!("{}{}{}", name.bold(), "@".bold(), version.bold());
-        verbose!("  {}", &info.url.cyan());
-        verbose!("  {}", &info.hash.cyan());
+    let filtered = filter_versions(sorted);
+    if filtered.is_empty() {
+        println!("{}", "No versions found for:".yellow());
+        println!("  {}", std::env::consts::OS.yellow());
+        println!("  {}", std::env::consts::ARCH.yellow());
+        return Ok(());
+    }
+    println!("{}", name.bold());
+    if let Some(desc) = fetch_description(tool.repo.as_str())? {
+        println!("  {}", desc.dimmed());
+    }
+    let (latest_version, latest_info) = filtered.first().unwrap();
+    println!("  {}", "latest:".bold());
+    println!("      {}", latest_version.split('-').next().unwrap_or(&latest_version).bold().green());
+    verbose!("          {}", latest_info.url.cyan());
+    verbose!("          {}", latest_info.hash.cyan());
+
+    if versions <= 1 {
+        return Ok(());
+    }
+    println!("  {}", "other versions:".bold());
+    for (version, info) in filtered[1..versions].iter() {
+        println!("      {}", version.split('-').next().unwrap_or(&version).bold());
+        verbose!("          {}", &info.url.cyan());
+        verbose!("          {}", &info.hash.cyan());
     }
     Ok(())
 }

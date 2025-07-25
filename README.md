@@ -1,6 +1,6 @@
 [![CI](https://github.com/konni332/frate/actions/workflows/ci.yml/badge.svg)](https://github.com/konni332/frate/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/master/LICENSE-MIT)
-[![License](https://img.shields.io/github/license/konni332/frate)](https://github.com/konni332/frate/blob/master/LICENSE-APACHE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/konni332/frate/blob/master/LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/frate)](https://crates.io/crates/frate)
 
 # frate
 **frate** is a developer tool and package manager designed for managing local software installations
@@ -69,16 +69,30 @@ frate --version
 ## Quickstart
 
 - Install and test the installation
+- Initialize frate for your project
 ````shell
 cargo install frate
+frate --vesion
 cd ~/your_project
 
 frate init 
+````
 
+- Have a look at the available tools
+````shell
+frate registry
+````
+
+- Start using ``frate``
+````shell
 frate add just@1.42.1
 frate sync
 
 frate install
+frate list
+
+frate shell
+just --vesion
 ````
 
 ---

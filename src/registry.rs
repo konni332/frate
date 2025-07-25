@@ -79,7 +79,7 @@ pub fn resolve_dependency(
 ) -> Result<ResolvedDependency> {
     let tool = fetch_registry(tool_name)?;
     
-    let full_version = expand_version(version, );
+    let full_version = expand_version(version);
     
     let release = tool.releases.get(&full_version)
         .or_else(|| {
@@ -95,7 +95,7 @@ pub fn resolve_dependency(
                 None
             }
         })
-        .ok_or(anyhow::anyhow!("Tool version not found in registry"))?;
+        .ok_or(anyhow::anyhow!("tool version not found in registry: {}", full_version))?;
 
     let resolved = ResolvedDependency {
         name: tool.name,
