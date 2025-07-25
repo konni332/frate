@@ -15,12 +15,14 @@ pub enum FrateCommand {
     /// If no package name is specified, installs all packages.
     Install {
         /// Install a specific package by name.
+        #[clap(short, long)]
         name: Option<String>,
     },
     /// Uninstalls packages and removes related directories and shims.
     /// If no package name is specified, uninstalls all packages.
     Uninstall {
         /// Uninstall a specific package by name.
+        #[clap(short, long)]
         name: Option<String>,
     },
     /// Searches registries for a tool and lists available versions.
