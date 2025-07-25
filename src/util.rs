@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::lock::{FrateLock, LockedPackage};
 use anyhow::{bail, Result};
 use regex::Regex;
+use reqwest::blocking::Client;
 use semver::Version;
 use walkdir::WalkDir;
 use crate::registry::ReleaseInfo;
@@ -230,6 +231,36 @@ pub fn is_power_shell() -> bool {
     std::env::var("PSModulePath").is_ok() ||
     std::env::var("PSVersionTable").is_ok() ||
     std::env::var("Pwsh").is_ok()
+}
+
+#[derive(serde::Deserialize)]
+struct GitHubRepo {
+    description: Option<String>,
+}
+
+pub fn fetch_description(url: &str) -> Result<Option<String>> {
+    let api_url = convert_url_to_api_url(url)?;
+    let client = Client::new();
+    let resp = client
+        .get(&api_url)
+        .header("User-Agent", "frate")
+        .send()?
+        .error_for_status()?;
+
+    let repo_data: GitHubRepo = resp.json()?;
+    Ok(repo_data.description)
+}
+
+fn convert_url_to_api_url(url: &str) -> Result<String> {
+    let parts: Vec<&str> = url.trim_end_matches('/').split('/').collect();
+    if parts.len() < 2 {
+        bail!("Invalid URL: {}", url);
+    }
+    let owner = parts[parts.len() - 2];
+    let name = parts[parts.len() - 1];
+
+    let api_url = format!("https://api.github.com/repos/{}/{}", owner, name);
+    Ok(api_url)
 }
 
 #[cfg(test)]

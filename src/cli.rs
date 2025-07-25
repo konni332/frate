@@ -15,19 +15,23 @@ pub enum FrateCommand {
     /// If no package name is specified, installs all packages.
     Install {
         /// Install a specific package by name.
-        #[clap(long)]
         name: Option<String>,
     },
     /// Uninstalls packages and removes related directories and shims.
     /// If no package name is specified, uninstalls all packages.
     Uninstall {
         /// Uninstall a specific package by name.
-        #[clap(short, long)]
         name: Option<String>,
     },
     /// Searches registries for a tool and lists available versions.
     Search {
+        /// Name of the tool you are looking for
         name: String,
+        /// The max number of versions to be displayed. Defaults to 1
+        #[clap(long, default_value = "1")]
+        versions: usize,
+        #[clap(short, long)]
+        verbose: bool,
     },
     /// Lists all tools defined in `frate.toml`.
     /// Use verbose mode for detailed info including lock status and installation.
