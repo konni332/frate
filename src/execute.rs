@@ -324,7 +324,7 @@ pub fn execute_search(name: String, versions: usize) -> Result<()> {
     if let Some(desc) = fetch_description(tool.repo.as_str())? {
         println!("  {}", desc.dimmed());
     }
-    let (latest_version, latest_info) = filtered.first().unwrap();
+    let (latest_version, latest_info) = filtered.last().unwrap();
     println!("  {}", "latest:".bold());
     println!("      {}", latest_version.split('-').next().unwrap_or(&latest_version).bold().green());
     verbose!("          {}", latest_info.url.cyan());
