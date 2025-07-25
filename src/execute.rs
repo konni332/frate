@@ -6,7 +6,7 @@ use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
 use frate::registry::fetch_registry;
-use frate::{clean_cache, is_cached, remove_cached_archive};
+use frate::{clean_cache, filter_versions, is_cached, remove_cached_archive};
 use frate::shims::{run_shell_with_frate_path};
 #[cfg(windows)]
 use frate::shims::{write_windows_activate};
@@ -310,8 +310,9 @@ pub fn execute_add(name_at_version: String) -> Result<()> {
 pub fn execute_search(name: String) -> Result<()> {
     let tool = fetch_registry(&name)?;
     let sorted = sort_versions(tool.releases);
-    for (version, info) in sorted {
-        println!("{}{}{}", name.bold(), "@".bold(), version.bold());
+    let filtered = filter_versions(sorted);
+    for (version, info) in filtered {
+        println!("{}{}{}", name.bold(), "@".bold(), version.split('-').next().unwrap_or(&version).bold());
         verbose!("  {}", &info.url.cyan());
         verbose!("  {}", &info.hash.cyan());
     }

@@ -212,6 +212,19 @@ fn is_executable(path: &Path) -> bool {
     }
 }
 
+/// Filters versions based on platform and architecture
+pub fn filter_versions(versions: Vec<(String, ReleaseInfo)>) -> Vec<(String, ReleaseInfo)> {
+    let arch = std::env::consts::ARCH;
+    let os = std::env::consts::OS;
+    let mut filtered_versions = Vec::new();
+    for version in versions {
+        if version.0.contains(arch) && version.0.contains(os) {
+            filtered_versions.push(version);
+        }
+    }
+    filtered_versions
+}
+
 #[cfg(windows)]
 pub fn is_power_shell() -> bool {
     std::env::var("PSModulePath").is_ok() ||
