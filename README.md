@@ -113,7 +113,7 @@ Frate offers a clean and expressive CLI inspired by tools like Cargo. Here's a b
 | `frate uninstall`        | Uninstalls **all** installed packages.                                                              | `frate uninstall`             |
 | `frate uninstall --name` | Uninstalls a specific tool.                                                                         | `frate uninstall --name just` |
 | `frate list`             | Lists all tools in `frate.toml`. Use `--verbose` for details.                                       | `frate list --verbose`        |
-| `frate run <tool>`       | Runs a tool's binary from `.frate/bin/<tool>/`. Arguments can be passed through.                    | `frate run just -- --version` |
+| `frate run <command>`    | Runs a tool's binary from `.frate/bin/<tool>/`. Arguments can be passed through.                    | `frate run "just --version"`  |
 | `frate shell`            | Launches a new shell with all tools available in `PATH`.                                            | `frate shell`                 |
 | `frate clean`            | Removes the global cache for **all** tools.                                                         | `frate clean`                 |
 | `frate clean --name`     | Removes the cache for a **specific** tool.                                                          | `frate clean --name just`     |
