@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::fs;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
@@ -24,6 +25,12 @@ pub struct LockedPackage {
     pub source: String,
     /// SHA-256 hash of the downloaded artifact.
     pub hash: String,
+}
+
+impl Display for LockedPackage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }
 
 impl FrateLock {
@@ -76,8 +83,8 @@ impl FrateLock {
     /// Returns an error if resolution fails for all dependencies.
     pub fn sync(
         &mut self, toml: &FrateToml
-    ) -> Result<()> {
-        self.packages.clear();
+    ) -> Result<Vec<LockedPackage>> {
+        let mut added = Vec::new();
         for (name, version_req) in &toml.dependencies {
             let resolved = match resolve_dependency(name, version_req) {
                 Ok(resolved) => resolved,
@@ -95,9 +102,10 @@ impl FrateLock {
             if self.packages.iter().any(|p| p.name == locked.name) {
                 continue;
             }
+            added.push(locked.clone());
             self.packages.push(locked);
         }
-        Ok(())
+        Ok(added)
     }
 }
 

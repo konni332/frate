@@ -160,8 +160,10 @@ pub fn execute_init() -> Result<()> {
         .to_str().ok_or(anyhow::anyhow!("Invalid directory name"))?;
     let _ = ensure_frate_dirs(&cwd)
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    println!(" {} {}", "Initialized".green().bold(), ".frate/");
     let toml = FrateToml::default(name);
     toml.save(cwd.join("frate.toml")).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    println!(" {} {}", "Initialized".green().bold(), "frate.toml");
 
     #[cfg(windows)]
     write_windows_activate()?;
@@ -178,8 +180,20 @@ pub fn execute_sync() -> Result<()> {
     let toml_str = std::fs::read_to_string(cwd.join("frate.toml"))?;
     let toml: FrateToml = toml::from_str(&toml_str)?;
     let mut lock = FrateLock::load_or_default(cwd.join("frate.lock"));
-    lock.sync(&toml)?;
+    let added = lock.sync(&toml)?;
+    if added.is_empty() {
+        println!("      {} {}", "Synced".bold().green(), "None".bold().yellow());
+    }
+    else {
+        println!(
+            "      {} {}",
+            "Synced".bold().green(),
+            added.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")
+        );
+    }
+
     lock.save(cwd.join("frate.lock"))?;
+    println!("       {} {}", "Saved".bold().green(), "frate.lock");
     Ok(())
 }
 /// Installs a specific package or all packages if none specified.
@@ -195,7 +209,7 @@ pub fn execute_install(name: Option<String>) -> Result<()> {
     match name {
         Some(name) => {
             let package = get_locked(&name, &lock)
-                .ok_or(anyhow::anyhow!("Package not found: {}", name))?;
+                .ok_or(anyhow::anyhow!(" Package not found: {}", name))?;
             install_package(&package, &cwd.join(".frate"))
                 .map_err(|e| anyhow::anyhow!("{:?}", e))?;
         }
@@ -240,12 +254,10 @@ pub fn execute_which(name: &str) -> Result<()> {
         return Ok(());
     }
     if let Some(exe_path) = exe_path {
-        println!("{}", "bin found".green());
-        verbose!("  {}", exe_path.to_string_lossy().green());
+        println!("      {} {}", "Binary".green().bold(), exe_path.iter().next_back().unwrap().to_string_lossy());
     }
     if let Some(shim_path) = shim_path {
-        println!("{}", "shim found".green());
-        verbose!("  {}", shim_path.to_string_lossy().green());
+        println!("        {} {}", "Shim".green().bold(), shim_path.iter().next_back().unwrap().to_string_lossy());
     }
     Ok(())
 }
@@ -267,6 +279,12 @@ pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
             return Ok(())
         }
     };
+    println!(
+        "     {} {} {}",
+        "Running".green().bold(),
+        exe_path.iter().next_back().unwrap().to_string_lossy(),
+        args.join(" ")
+    );
     let output = Command::new(exe_path)
         .args(args).output()?;
     if !output.status.success() {
@@ -282,7 +300,7 @@ pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
 ///
 /// # Errors
 /// Returns an error if the format is invalid.
-fn extract_name_at_version(name_at_version: String) -> Result<(String, String)> {
+fn extract_name_at_version(name_at_version: &str) -> Result<(String, String)> {
     let mut split = name_at_version.split('@');
     let name = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
     let version = split.next().ok_or(anyhow::anyhow!("Invalid name@version"))?;
@@ -296,12 +314,14 @@ fn extract_name_at_version(name_at_version: String) -> Result<(String, String)> 
 /// # Errors
 /// Returns an error if parsing, loading, or saving fails.
 pub fn execute_add(name_at_version: String) -> Result<()> {
-    let (name, version) = extract_name_at_version(name_at_version)?;
+    let (name, version) = extract_name_at_version(&name_at_version)?;
     let mut toml = FrateToml::load(std::env::current_dir()?.join("frate.toml"))
         .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     toml.add(&name, &version)?;
     toml.save(std::env::current_dir()?.join("frate.toml"))
-        .map_err(|e| anyhow::anyhow!("{:?}", e))
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    println!("       {} {}", "Added".green().bold(), name_at_version);
+    Ok(())
 }
 /// Searches the registry for a tool and lists available versions.
 ///
@@ -373,9 +393,10 @@ pub fn execute_registry() -> Result<()> {
     let url = "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/registry.json";
     let resp = reqwest::blocking::get(url)?;
     let registry: RegistryIndex = serde_json::from_reader(resp)?;
+    println!("{}", "Available tools:".bold());
     for tool in &registry.registered {
-        println!("{}", tool.name.bold());
-        verbose!("  {}", tool.repo.cyan());
+        println!("  {}", tool.name.bold().green());
+        verbose!("    {}", tool.repo.cyan());
     }
     Ok(())
 }
