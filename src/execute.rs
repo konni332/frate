@@ -62,8 +62,8 @@ pub fn execute(cli: Cli) -> Result<()> {
             }
             execute_which(&name)
         }
-        FrateCommand::Run { name, args} => {
-            execute_run(&name, args)
+        FrateCommand::Run { command } => {
+            execute_run(&command)
         }
         FrateCommand::Add { name_at_version } => {
             execute_add(name_at_version)
@@ -269,28 +269,36 @@ pub fn execute_which(name: &str) -> Result<()> {
 ///
 /// # Errors
 /// Returns an error if execution fails or the executable is not found.
-pub fn execute_run(name: &str, args: Vec<String>) -> Result<()> {
+pub fn execute_run(command: &str) -> Result<()> {
+    let (name, args) = match command.split_once(' ') {
+        Some((name, args)) => {
+            (name, args.split_whitespace().into_iter().collect::<Vec<_>>())
+        },
+        None => {
+            bail!("Invalid command: {}", command);
+        }
+    };
     let (exe_path, _) = find_installed_paths(name)?;
     let exe_path = match exe_path {
         Some(exe_path) => {
             exe_path
         }
         None => {
-            return Ok(())
+            bail!("Executable not found: {}", name);
         }
     };
     println!(
         "     {} {} {}",
         "Running".green().bold(),
-        exe_path.iter().next_back().unwrap().to_string_lossy(),
-        args.join(" ")
+        exe_path.display(),
+        args.iter().map(|arg| arg.to_string()).collect::<Vec<_>>().join(" ")
     );
     let output = Command::new(exe_path)
         .args(args).output()?;
     if !output.status.success() {
         bail!("{}", String::from_utf8(output.stderr)?.red());
     }
-    println!("{}", String::from_utf8(output.stdout)?);
+    print!("{}", String::from_utf8(output.stdout)?);
     Ok(())
 }
 /// Parses a string of the format "name@version" into a tuple.

@@ -44,10 +44,8 @@ pub enum FrateCommand {
     },
     /// Runs the executable binary of a tool from `.frate/bin/<tool_name>/`.
     Run {
-        /// Name of the tool to run.
-        name: String,
-        /// Arguments passed to the tool executable.
-        args: Vec<String>,
+        /// Command to run e.g., `just --version`
+        command: String,
     },
     /// Synchronizes the `frate.lock` file with the current `frate.toml`.
     Sync,
