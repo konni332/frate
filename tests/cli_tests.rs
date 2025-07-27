@@ -130,7 +130,7 @@ mod cli_integration_tests {
 
         Command::cargo_bin("frate").unwrap()
             .current_dir(dir_path)
-            .args(&["run", "just", "--", "--version"])
+            .args(&["run", "just --version"])
             .assert()
             .success();
 
