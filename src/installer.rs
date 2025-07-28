@@ -1,6 +1,5 @@
-use std::ffi::OsStr;
 use std::io::{Cursor};
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
 use crate::util::{ensure_frate_dirs, get_frate_dir};

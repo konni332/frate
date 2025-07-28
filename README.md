@@ -30,6 +30,7 @@ to create a new shell session with all local tools in the ``PATH``
   - ``add``
   - ``sync``
   - ``list``
+  - ``search``
   - ``shell``
 
 - Isolated, reproducible environments
@@ -119,7 +120,7 @@ Frate offers a clean and expressive CLI inspired by tools like Cargo. Here's a b
 | `frate clean --name`     | Removes the cache for a **specific** tool.                                                          | `frate clean --name just`     |
 | `frate search <name>`    | Searches for a tool and lists available versions from the registry.                                 | `frate search just`           |
 | `frate which <name>`     | Outputs the full path to a tool's installed binary and its shim (if available).                     | `frate which just`            |
-
+| `frate registry`         | Outputs all currently available tools                                                               | `frate registry`              |
 ---
 
 ## frate.toml
@@ -192,7 +193,7 @@ cargo test
 
 Please follow Conventional Commits for your commit messages and try to keep the code style idiomatic.
 
-If you're unsure where to start, check the [issues](https://github.com/konni332/frate/issues) marked good ``first issue`` or ``help wanted``.
+If you're unsure where to start, check the [issues](https://github.com/konni332/frate/issues) marked ``good first issue`` or ``help wanted``.
 
 ### Notes
 
