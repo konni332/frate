@@ -102,7 +102,11 @@ just --vesion
 
 Frate offers a clean and expressive CLI inspired by tools like Cargo. Here's a breakdown of all available commands:
 
+### Demo
 
+![frate-demo](./assets/frate-demo-resized.gif)
+
+---
 
 | Command                  | Description                                                                                         | Example Usage                 |
 |--------------------------|-----------------------------------------------------------------------------------------------------|-------------------------------|
