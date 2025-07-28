@@ -1,5 +1,6 @@
+use std::ffi::OsStr;
 use std::io::{Cursor};
-use std::path::{Path};
+use std::path::{Path, PathBuf};
 use crate::lock::{FrateLock, LockedPackage};
 use crate::shims::create_shim;
 use crate::util::{ensure_frate_dirs, get_frate_dir};
@@ -70,9 +71,14 @@ pub fn install_package(package: &LockedPackage, frate_dir: &Path) -> Result<()> 
         download_and_extract(url, &dest_dir.to_string_lossy(), &package.hash)?;
     }
     // create shim
-    let shim_path = shims_dir.join(&package.name);
     let target_path = get_binary(&package.name)?
         .ok_or(anyhow!("Binary not found: {}", package.name))?;
+    let shim_path = shims_dir.join(
+        target_path
+            .file_stem()
+            .ok_or_else(|| anyhow!("Invalid file name: {}", target_path.display()))?
+    );
+
     create_shim(target_path, shim_path)?;
     println!("   {} {}", "Installed".bold().green(), package.name);
     Ok(())
