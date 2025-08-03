@@ -5,8 +5,7 @@ use serde::Deserialize;
 use verbosio::{set_verbosity, verbose};
 use frate::installer::{install_package, install_packages, uninstall_package, uninstall_packages};
 use frate::lock::FrateLock;
-use frate::registry::fetch_registry;
-use frate::{clean_cache, fetch_description, filter_versions, is_cached, remove_cached_archive};
+use frate::{clean_cache, fetch_description, fetch_tool_registry, filter_versions, is_cached, remove_cached_archive};
 use frate::shims::{run_shell_with_frate_path};
 #[cfg(windows)]
 use frate::shims::{write_windows_activate};
@@ -339,7 +338,7 @@ pub fn execute_add(name_at_version: String) -> Result<()> {
 /// # Errors
 /// Returns an error if fetching or parsing registry data fails.
 pub fn execute_search(name: String, versions: usize) -> Result<()> {
-    let tool = fetch_registry(&name)?;
+    let tool = fetch_tool_registry(&name)?;
     let sorted = sort_versions(tool.releases);
     let filtered = filter_versions(sorted);
     

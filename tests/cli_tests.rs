@@ -46,21 +46,18 @@ mod cli_integration_tests {
         let dir = tempdir().unwrap();
         let dir_path = dir.path();
 
-        // Init (wenn dein CLI sowas hat, sonst erstelle frate.toml)
         Command::cargo_bin("frate").unwrap()
             .current_dir(dir_path)
             .arg("init")
             .assert()
             .success();
 
-        // Add dependency
         Command::cargo_bin("frate").unwrap()
             .current_dir(dir_path)
             .args(["add", "hello@1.0.0"])
             .assert()
             .success();
 
-        // List dependencies (oder wie deine CLI es nennt)
         let output = Command::cargo_bin("frate").unwrap()
             .current_dir(dir_path)
             .arg("list")

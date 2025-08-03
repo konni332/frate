@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use crate::global::utils::get_global_cache_dir;
 use anyhow::{anyhow, bail, Context, Result};
 use walkdir::WalkDir;
+use crate::RegistryTool;
 
 pub fn get_cached_archive(url: &str) -> Result<Option<PathBuf>> {
     let cache_dir = get_global_cache_dir()?;
@@ -68,4 +69,8 @@ pub fn is_cached(full_name: &str) -> Result<bool> {
         }
     }
     Ok(false)
+}
+
+pub fn cache_registry(registry: Vec<RegistryTool>) -> Result<()> {
+    Ok(())
 }

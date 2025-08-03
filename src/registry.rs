@@ -77,7 +77,7 @@ pub fn resolve_dependency(
     tool_name: &str,
     version: &str
 ) -> Result<ResolvedDependency> {
-    let tool = fetch_registry(tool_name)?;
+    let tool = fetch_tool_registry(tool_name)?;
     
     let full_version = expand_version(version);
     
@@ -122,7 +122,7 @@ pub fn resolve_dependency(
 /// # Errors
 ///
 /// Returns an error if the registry cannot be fetched or parsed.
-pub fn fetch_registry(tool_name: &str) -> Result<RegistryTool> {
+pub fn fetch_tool_registry(tool_name: &str) -> Result<RegistryTool> {
     let url = format!(
         "https://raw.githubusercontent.com/konni332/frate-registry/refs/heads/master/tools/{}.json",
         tool_name
