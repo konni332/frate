@@ -2,6 +2,8 @@
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://github.com/konni332/frate/blob/master/LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/frate)](https://crates.io/crates/frate)
 
+![Logo](./assets/logo_resized.png)
+
 # frate
 **frate** is a developer tool and package manager designed for managing local software installations
 without requiring root privileges.
