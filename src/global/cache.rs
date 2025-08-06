@@ -21,6 +21,7 @@ pub fn cache_archive(url: &str, bytes: &[u8]) -> Result<()>{
         std::fs::create_dir_all(&cache_dir)
             .with_context(|| format!("Could not create cache dir {:?}", cache_dir))?;
         println!("Cache directory created: {}", cache_dir.display());
+        println!("{}{}`{}`", "Created", "cache directory:", cache_dir.display());
     }
     let file_name = url.split('/').next_back().ok_or(anyhow!("Could not determine archive name"))?;
     let path = cache_dir.join(file_name);

@@ -1,5 +1,6 @@
 use std::path::Path;
 use anyhow::Result;
+use colored::Colorize;
 #[cfg(windows)]
 use crate::is_power_shell;
 
@@ -175,8 +176,10 @@ pub fn run_shell_with_frate_path() -> std::io::Result<()> {
             "-NoExit",
             "-Command",
             &format!(
-                "$env:PATH='{}'; Write-Host 'Frate shell activated. Type \"exit\" to leave.'",
-                new_path.replace('\\', "\\\\") // Escape backslashes
+                "$env:PATH='{}'; Write-Host '   {} `{}`'",
+                new_path.replace('\\', "\\\\"),
+                "Activated".bold().green(),
+                "frate shell"
             ),
         ])
         .spawn()?
@@ -194,10 +197,19 @@ pub fn run_shell_with_frate_path() -> std::io::Result<()> {
 
         Command::new(&shell)
             .arg("-i")
-            .env("PATH", new_path)
+            .arg("-c")
+            .arg(format!(
+                "echo '   {} {}' && PATH='{}' exec $SHELL -i",
+                "Activated".bold().green(),
+                "frate shell",
+                new_path.replace('\\', "\\\\"),
+            ))
             .spawn()?
             .wait()?;
+
     }
+
+    println!(" {} `{}`", "Deactivated".bold().red(), "frate shell");
 
     Ok(())
 }
