@@ -89,7 +89,6 @@ frate registry
 - Start using ``frate``
 ````shell
 frate add just@1.42.1
-frate sync
 
 frate install
 frate list
@@ -115,7 +114,7 @@ Frate offers a clean and expressive CLI inspired by tools like Cargo. Here's a b
 | `frate init`             | Initializes a new `frate.toml` in the current directory.                                            | `frate init`                  |
 | `frate add <name>@<ver>` | Adds a tool to `frate.toml` and updates the lock file. Does **not** install the tool automatically. | `frate add just@1.14.0`       |
 | `frate sync`             | Synchronizes `frate.lock` with the current `frate.toml`.                                            | `frate sync`                  |
-| `frate install`          | Installs **all** packages listed in the lockfile.                                                   | `frate install`               |
+| `frate install`          | Syncs the lockfile. Installs **all** packages listed in the lockfile.                               | `frate install`               |
 | `frate install --name`   | Installs a **single** package by name.                                                              | `frate install --name just`   |
 | `frate uninstall`        | Uninstalls **all** installed packages.                                                              | `frate uninstall`             |
 | `frate uninstall --name` | Uninstalls a specific tool.                                                                         | `frate uninstall --name just` |

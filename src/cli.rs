@@ -13,10 +13,12 @@ pub enum FrateCommand {
     Shell,
     /// Installs packages listed in the `frate.lock` file.
     /// If no package name is specified, installs all packages.
+    /// Will auto-sync by default
     Install {
         /// Install a specific package by name.
         #[clap(short, long)]
         name: Option<String>,
+        /// Don't sync the lock file before installing.
         #[clap(long = "no-sync")]
         no_sync: bool,
     },
