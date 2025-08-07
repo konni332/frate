@@ -49,8 +49,8 @@ pub fn execute(cli: Cli) -> Result<()> {
         FrateCommand::Sync => {
             execute_sync()
         }
-        FrateCommand::Install { name } => {
-            execute_install(name)
+        FrateCommand::Install { name, no_sync } => {
+            execute_install(name, no_sync)
         }
         FrateCommand::Uninstall { name } => {
             execute_uninstall(name)
@@ -202,7 +202,11 @@ pub fn execute_sync() -> Result<()> {
 ///
 /// # Errors
 /// Returns an error if the package is not found or installation fails.
-pub fn execute_install(name: Option<String>) -> Result<()> {
+pub fn execute_install(name: Option<String>, no_sync: bool) -> Result<()> {
+    if !no_sync {
+        execute_sync()?;
+    }
+
     let cwd = std::env::current_dir()?;
     let lock = FrateLock::load_or_default(cwd.join("frate.lock"));
     match name {

@@ -17,6 +17,8 @@ pub enum FrateCommand {
         /// Install a specific package by name.
         #[clap(short, long)]
         name: Option<String>,
+        #[clap(long = "no-sync")]
+        no_sync: bool,
     },
     /// Uninstalls packages and removes related directories and shims.
     /// If no package name is specified, uninstalls all packages.
